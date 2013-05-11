@@ -1,3 +1,6 @@
+-- needed for using string-literals with ByteString
+{-# LANGUAGE OverloadedStrings #-}
+
 import qualified Data.ByteString.Char8 as B
 import Text.Regex.Posix
 
@@ -34,6 +37,8 @@ readHdr hdr = (msgtype, msgoptions)
 		msgtype = read . B.unpack . head $ contents hdr
 		msgoptions = tail $ contents hdr
 
+-- interpret a ByteString as MsgPart
+-- the input has to be in the right form
 readMsg :: B.ByteString -> MsgPart
 readMsg input = makeMsg (readHdr headerLine) content
 	where
