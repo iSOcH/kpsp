@@ -28,7 +28,7 @@ readMsg input = makeMsg (readHdr headerLine) content
 	where
 		headerLine = head (lines input)
 		-- outermost 'init' is for removing the trailing \n added by unlines
-		content = init (unlines (init (tail (lines input))))
+		content = init . unlines . init . tail $ lines input
 
 -- interprets the first line of a msgpart
 -- TODO: make sure the first line actually starts with "----BEGIN "
@@ -37,8 +37,8 @@ readHdr hdr = (msgtype, msgoptions)
 	where
 		-- drop 10 drops "----BEGIN "
 		contents = words . takeWhile (/= '-') . drop 10
-		msgtype = read (head (contents hdr))
-		msgoptions = tail (contents hdr)
+		msgtype = read . head $ contents hdr
+		msgoptions = tail $ contents hdr
 
 -- gets messageparts from a file
 -- hf explaining this...
