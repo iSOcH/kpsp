@@ -1,4 +1,5 @@
 -- needed for using string-literals with ByteString
+-- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}
 
 import qualified Data.ByteString.Char8 as B
@@ -22,10 +23,11 @@ makeMsg (msgtype, options) content = MsgPart msgtype options content
 
 -- make the msg print in the way we want and expect it in a file
 instance Show MsgPart where
-	show msg = "----BEGIN " ++ show (msgtype msg) ++
-		B.unpack (foldl (\acc option -> acc `B.append` " " `B.append` option) "" (options msg)) ++
+	show msg = "----BEGIN " ++ show (msgtype msg) ++ " " ++
+		B.unpack (B.intercalate " " (options msg)) ++
 		"----\n" ++ B.unpack (content msg) ++ "\n" ++
 		"----END " ++ show (msgtype msg) ++ "----"
+-- alternative for intercalate: foldl (\acc option -> acc `B.append` " " `B.append` option) "" (options msg)
 
 -- interprets the first line of a msgpart
 -- TODO: make sure the first line actually starts with "----BEGIN "
