@@ -3,7 +3,7 @@ bla//+ba
 ----END KEYCRYPTED----
 
 ----BEGIN MSGCRYPTED AES256 CBC----
-bla+bl/ubb
+bla+bl/ubb khju
 ----END MSGCRYPTED----
 
 ----BEGIN SIGNATURE SHA256 RSA 8----
