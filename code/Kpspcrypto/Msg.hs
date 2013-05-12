@@ -1,3 +1,5 @@
+module Kpspcrypto.Msg where
+
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}
@@ -6,7 +8,7 @@ import qualified Data.ByteString.Char8 as B
 import Text.Regex.Posix
 
 sampleMsgStr = 	"----BEGIN KEYCRYPTED RSA 8----\nbla//+ba\n----END KEYCRYPTED----\n\n" `B.append`
-				"----BEGIN MSGCRYPTED AES256----\nbla+bl/ubb\n----END MSGCRYPTED----\n\n" `B.append`
+				"----BEGIN MSGCRYPTED AES256 CBC----\nbla+bl/ubb\n----END MSGCRYPTED----\n\n" `B.append`
 				"----BEGIN SIGNATURE SHA256 RSA 8----\nbl/+ubb+/+lubb\n----END SIGNATURE----\n\n"
 
 -- possible types of messageparts
