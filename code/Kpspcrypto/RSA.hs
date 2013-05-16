@@ -66,9 +66,10 @@ toInt = DB.decode . toLazy . B64.decode
 sample data (from
 http://de.wikipedia.org/wiki/RSA-Kryptosystem)
 ---------------------------------------------}
+exmsg = toStr 7
+
 expub = (toStr 23, toStr 143)
 expriv = (toStr 47, toStr 143)
-exmsg = toStr 7
 
 expub2 = (toStr 1721, toStr 263713)
 expriv2 = (toStr 1373, toStr 263713)
