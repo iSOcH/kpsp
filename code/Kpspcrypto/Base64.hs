@@ -14,12 +14,26 @@ import Data.Bits
 import Data.Maybe
 import Data.Char
 
-{-----------------
-encoding functions
------------------}
+{---------------
+public functions
+---------------}
+-- encode a given ByteString using Base64
+-- the output length will be a multiple of 4
 encode :: B.ByteString -> B.ByteString
 encode input = encodeR $ addpad input
 
+-- decode Base64 encoded content of a ByteString
+-- input length must be a multiple of 4
+decode :: B.ByteString -> B.ByteString
+decode encoded = B.take resultlen decWithTrash
+	where
+		(unpadded, padlen) = unpad encoded
+		decWithTrash = decodeR unpadded
+		resultlen = B.length decWithTrash - padlen
+
+{---------------
+encoding helpers
+---------------}
 encodeR :: (B.ByteString, Int) -> B.ByteString
 -- encodeR B.empty = ... gives ghc error "Qualified name in binding position"
 encodeR (x,padlen)
@@ -32,6 +46,7 @@ encodeR (x,padlen)
 	where
 		subs input = B.pack $ map (table V.!) (toB64BitGroups input)
 			
+-- splits a ByteString (with length 3) into four 6-bit values
 toB64BitGroups :: B.ByteString -> [Int]
 toB64BitGroups x = [
 	shiftR (ord (B.index x 0)) 2,
@@ -39,6 +54,8 @@ toB64BitGroups x = [
 	shiftL (ord (B.index x 1) .&. 15) 2 .|. shiftR (ord (B.index x 2)) 6,
 	ord (B.index x 2) .&. 63]
 
+-- expands an input to a multiple of 3 Bytes for processing
+-- second element of tuple is the length of the added padding
 addpad :: B.ByteString -> (B.ByteString, Int)
 addpad x = (x `B.append` B.replicate padlen '\0', padlen)
 	where
@@ -46,13 +63,14 @@ addpad x = (x `B.append` B.replicate padlen '\0', padlen)
 		padlen = (3 - len `mod` 3) `mod` 3
 
 -- base64 index table
+-- contains the allowed characters in the Base64 output
 table :: V.Vector Char
 table = V.fromListN 64 (['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9'] ++ ['+','/'])
 
-
-{-----------------
-decoding functions
------------------}
+{---------------
+decoding helpers
+---------------}
+-- combines 4 6-bit values into a ByteString with length 3
 fromB64BitGroups :: [Int] -> B.ByteString
 fromB64BitGroups x = B.pack $ map chr ords
 	where
@@ -61,13 +79,9 @@ fromB64BitGroups x = B.pack $ map chr ords
 			shiftL ((x !! 1) .&. 15) 4 .|. shiftR (x !! 2) 2,
 			shiftL ((x !! 2) .&. 3) 6 .|. (x !! 3)]
 
-decode :: B.ByteString -> B.ByteString
-decode encoded = B.take (lenWithTrash - (snd upad)) decWithTrash
-	where
-		upad = unpad encoded
-		decWithTrash = decodeR . fst $ upad
-		lenWithTrash = B.length decWithTrash
-
+-- removes the padding from a Base64-encoded input
+-- second element in the returned tuple is the amount
+-- of bytes to be discarded after decoding
 unpad :: B.ByteString -> (B.ByteString, Int)
 unpad x = (
 	B.takeWhile (/= '=') x `B.append` B.replicate padlen '0',
@@ -82,5 +96,6 @@ decodeR x
 	where
 		subs input = fromB64BitGroups [fromJust (M.lookup c tableR) | c <- B.unpack input]
 
+-- contains the 6bit-values for the allowed chars in Base64 encoded data
 tableR :: M.Map Char Int
 tableR = M.fromList [(table V.! v ,v) | v <- [0..63]]
