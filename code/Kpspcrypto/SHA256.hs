@@ -28,7 +28,7 @@ pad input = fill $ input `B.snoc` chr 0x70
 		--124 because 62 `mod` 64 results in -2, which we cant use for replicate
 		remaining = (124 - lenmod) `mod` 64
 
--- adds padding and size, output will always be a multiple of 64 bytes in length
+-- adds padding and size, output length will always be a multiple of 64 bytes
 preprocess :: B.ByteString -> B.ByteString
 preprocess input = pad input `B.append` lenAsBStr
 	where
