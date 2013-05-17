@@ -15,6 +15,7 @@ import Data.Char
 hash :: B.ByteString -> B.ByteString 
 hash input = id input
 
+-- adds padding (in the form 0x70[00]*) until there are 4 bytes left for the size
 pad :: B.ByteString -> B.ByteString
 pad input = fill $ input `B.snoc` chr 0x70
 	where
@@ -23,9 +24,11 @@ pad input = fill $ input `B.snoc` chr 0x70
 			-- we fill up to 60 bytes because B.length only gives us 32bit
 			| lenmod == 60 = unfilled
 			| otherwise = unfilled `B.append` B.replicate remaining '\0'
-		lenmod = (B.length input) + 1 `mod` 64
-		remaining = (64 + (60 - lenmod)) `mod` 64
+		lenmod = (B.length input) + 1 `mod` 64 -- +1 because we already added a byte
+		--124 because 62 `mod` 64 results in -2, which we cant use for replicate
+		remaining = (124 - lenmod) `mod` 64
 
+-- adds padding and size, output will always be a multiple of 64 bytes in length
 preprocess :: B.ByteString -> B.ByteString
 preprocess input = pad input `B.append` lenAsBStr
 	where
