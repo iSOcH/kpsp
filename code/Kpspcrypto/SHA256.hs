@@ -41,6 +41,13 @@ preprocess input = pad input `B.append` lenAsBStr
 			,chr $ len .&. 0x000000FF
 			]
 
+getChunks :: B.ByteString -> [B.ByteString]
+getChunks unchunked
+	| B.length unchunked > 64 = first : getChunks rest
+	| otherwise = [unchunked]
+	where
+		first = B.take 64 unchunked
+		rest = B.drop 64 unchunked
 {---
 Data
 ---}

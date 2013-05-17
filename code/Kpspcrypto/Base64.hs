@@ -83,4 +83,4 @@ decodeR x
 		subs input = fromB64BitGroups [fromJust (M.lookup c tableR) | c <- B.unpack input]
 
 tableR :: M.Map Char Int
-tableR = M.fromList [(c,v) | v <- [0..63], c <- [table V.! v]]
+tableR = M.fromList [(table V.! v ,v) | v <- [0..63]]
