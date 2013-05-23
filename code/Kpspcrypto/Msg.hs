@@ -57,4 +57,4 @@ getMsgParts :: B.ByteString -> [MsgPart]
 getMsgParts input = map readMsg regmatches
 	where
 		regmatches = getAllTextMatches (input =~ regex :: AllTextMatches [] B.ByteString)
-		regex = "----BEGIN [A-Z0-9 ]+----\n[a-zA-Z0-9+/]+\n----END [A-Z0-9]+----" :: B.ByteString
+		regex = "----BEGIN [A-Z0-9 ]+----\n[a-zA-Z0-9+/=]+\n----END [A-Z0-9]+----" :: B.ByteString
