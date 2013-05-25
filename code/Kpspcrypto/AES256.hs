@@ -1,4 +1,4 @@
-module Kpspcrypto.AES256 (encode, decode) where
+module Kpspcrypto.AES256 (encode, decode, blocklen, keylen) where
 
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
@@ -24,3 +24,13 @@ decoding functions
 -----------------}
 decode :: Key -> Block -> Block
 decode key crypted = id crypted
+
+
+{---------
+properties
+---------}
+blocklen :: Int
+blocklen = 16
+
+keylen :: Int
+keylen = 32
