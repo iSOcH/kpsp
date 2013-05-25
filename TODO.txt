@@ -10,5 +10,12 @@ Zwischenschicht für Bearbeitung einzelner msgparts
 
 AES256 aus Library verwenden
 
+Blockchaining
+	- cbc :: (plain -> crypt) -> blocklen -> IV -> [plain] -> [crypt]
+	- ecb :: (plain -> crypt) -> blocklen -> [plain] -> [crypt]
+	- "(plain -> crypt)" ist z.b. "AES256.encode key"
+	- blocklen ist Int
+	- IV, plain und crypt sind ByteString
+
 Hauptfiles
 	- hsencrypt: muss sich auch random-generator vom sys geben lassen
