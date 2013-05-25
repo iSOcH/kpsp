@@ -10,7 +10,7 @@ import Data.Char
 -- separate input into blocks and (always!) add padding
 pad :: Int -> B.ByteString -> [B.ByteString]
 pad n input
-	| B.length input >= n = [next] ++ pad n rest
+	| B.length input >= n = next : pad n rest
 	| otherwise = [input `B.append` (B.replicate padlen padchar)]
 	where
 		(next, rest) = B.splitAt n input
