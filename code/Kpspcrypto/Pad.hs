@@ -25,7 +25,7 @@ unpad n input = unpadblocks $ block n input
 
 unpadblocks :: [B.ByteString] -> B.ByteString
 -- last block: at least one byte is padding
-unpadblocks (x:[]) = B.take padlen x
+unpadblocks [x] = B.take padlen x
 	where
 		n = B.length x
 		padlen = n - (ord $ B.last x)
