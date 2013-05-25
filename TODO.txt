@@ -1,0 +1,14 @@
+RSA-Schlüsselerzeugung ("hskeygenerator") //Mary
+	- braucht random-primzahl mit gewisser länge (256bit?)
+	- muss file schreiben gemäss 3.2.1 in zwischenbericht (siehe RSA.hs)
+
+SHA256 Implementation //Pascal
+
+Zwischenschicht für Bearbeitung einzelner msgparts
+	- Entschlüsselung (nimmt Optionen aus msgpart)
+	- Verschlüsselung (nimmt Optionen als Argument)
+
+AES256 aus Library verwenden
+
+Hauptfiles
+	- hsencrypt: muss sich auch random-generator vom sys geben lassen
