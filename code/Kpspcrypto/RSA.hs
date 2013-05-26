@@ -20,7 +20,7 @@ type Privkey = Pubkey
 public functions
 ---------------}
 encrypt :: KeyFileContent -> B.ByteString -> B.ByteString
-encrypt key msgIn = toStr $ modexp msg e n
+encrypt key msgIn = asStr $ modexp msg e n
 	where
 		e = toInt eIn
 		n = toInt nIn
