@@ -14,7 +14,10 @@ type AsymCipher = B.ByteString -- z.B. "RSA"
 type AsymKey = B.ByteString -- kompletter inhalt des pubkeyfiles
 
 genMsgPart :: AsymCipher -> AsymKey -> B.ByteString -> MsgPart
-genMsgPart acipher akey skey = MsgPart KEYCRYPTED [acipher] skey
+genMsgPart "RSA" = genMsgPartRSA
+
+genMsgPartRSA :: AsymKey -> B.ByteString -> MsgPart
+genMsgPartRSA akey skey = MsgPart KEYCRYPTED ["RSA"] skey
 
 getSymKey :: AsymKey -> MsgPart -> B.ByteString
 getSymKey akey msg = (fromJust $ M.lookup cipher ciphers) akey msg
