@@ -19,7 +19,7 @@ genMsgPart "RSA" akey skey = MsgPart KEYCRYPTED ["RSA"] skey
 getSymKey :: AsymKey -> MsgPart -> B.ByteString
 getSymKey akey msg = (fromJust $ M.lookup cipher ciphers) akey msg
 	where
-		cipher = head $ options msg 
+		cipher = head $ options msg
 
 getSymKeyFromRSA :: AsymKey -> MsgPart -> B.ByteString
 getSymKeyFromRSA akey msg = content msg
