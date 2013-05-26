@@ -10,9 +10,6 @@ import Data.Maybe
 
 import Kpspcrypto.Msg
 
-type AsymCipher = B.ByteString -- z.B. "RSA"
-type AsymKey = B.ByteString -- kompletter inhalt des pubkeyfiles
-
 genMsgPart :: AsymCipher -> AsymKey -> B.ByteString -> MsgPart
 genMsgPart "RSA" akey skey = MsgPart KEYCRYPTED ["RSA"] skey
 

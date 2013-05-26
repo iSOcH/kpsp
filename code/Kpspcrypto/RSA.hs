@@ -8,29 +8,32 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Binary as DB
 import qualified Kpspcrypto.Base64 as B64
+import Kpspcrypto.Serial
 
+type KeyFileContent = B.ByteString
 -- first part is e or d, second is n
 type Pubkey = (B.ByteString, B.ByteString)
-type Privkey = (B.ByteString, B.ByteString)
+type Privkey = Pubkey
 
 
 {---------------
 public functions
 ---------------}
-encrypt :: Pubkey -> B.ByteString -> B.ByteString
-encrypt (eIn, nIn) msgIn = toStr $ modexp msg e n
+encrypt :: KeyFileContent -> B.ByteString -> B.ByteString
+encrypt key msgIn = toStr $ modexp msg e n
 	where
 		e = toInt eIn
 		n = toInt nIn
-		msg = toInt msgIn
+		msg = asInt msgIn
+		(eIn,nIn) = fromFile key
 
-sign :: Privkey -> B.ByteString -> B.ByteString
+sign :: KeyFileContent -> B.ByteString -> B.ByteString
 sign = encrypt
 
-decrypt :: Privkey -> B.ByteString -> B.ByteString
+decrypt :: KeyFileContent -> B.ByteString -> B.ByteString
 decrypt = encrypt
 
-checksig :: Pubkey -> B.ByteString -> B.ByteString -> Bool
+checksig :: KeyFileContent -> B.ByteString -> B.ByteString -> Bool
 checksig pubkey sig msg = encrypt pubkey sig == msg
 
 {---------------
@@ -47,25 +50,30 @@ modexp b e n
 {-----------------------------
 less related utility functions
 -----------------------------}
--- from http://stackoverflow.com/questions/7815402/convert-a-lazy-bytestring-to-a-strict-bytestring
-toStrict :: BL.ByteString -> B.ByteString
-toStrict = B.concat . BL.toChunks
-
-toLazy :: B.ByteString -> BL.ByteString
-toLazy strict = BL.fromChunks [strict]
-
 -- converts an Integer to Base64 encoded ByteString
 toStr :: Integer -> B.ByteString
-toStr = B64.encode . toStrict . DB.encode
+toStr = B64.encode . asStr
 
 -- reads a Base64 encoded Integer from a ByteString
 toInt :: B.ByteString -> Integer
-toInt = DB.decode . toLazy . B64.decode
+toInt = asInt . B64.decode
+
+-- extracts key from file
+fromFile :: B.ByteString -> Pubkey
+fromFile file = (e,n)
+	where
+		contentline = B.lines file !! 1
+		[e,n] = B.split ',' contentline
 
 {---------------------------------------------
 sample data (from
 http://de.wikipedia.org/wiki/RSA-Kryptosystem)
 ---------------------------------------------}
+rsapubkey = "----BEGIN RSA PUBLIC KEY----\nFw==,jw==\n----END RSA PUBLIC KEY----" :: B.ByteString
+rsaprivkey = "----BEGIN RSA PRIVATE KEY----\nLw==,jw==\n----END RSA PRIVATE KEY----" :: B.ByteString
+rsarecvpubkey = "----BEGIN RSA PUBLIC KEY----\nBrk=,BAYh\n----END RSA PUBLIC KEY----" :: B.ByteString
+rsarecvprivkey = "----BEGIN RSA PRIVATE KEY----\nBV0=,BAYh\n----END RSA PRIVATE KEY----" :: B.ByteString
+
 exmsg = toStr 7
 
 expub = (toStr 23, toStr 143)

@@ -7,6 +7,10 @@ module Kpspcrypto.Msg where
 import qualified Data.ByteString.Char8 as B
 import Text.Regex.Posix
 
+type AsymCipher = B.ByteString -- z.B. "RSA"
+type AsymKey = B.ByteString -- kompletter inhalt des pub- oder privatekeyfiles
+type HashType = B.ByteString -- z.B. "SHA256"
+
 sampleMsgStr = 	"----BEGIN KEYCRYPTED RSA 8----\nbla//+ba\n----END KEYCRYPTED----\n\n" `B.append`
 				"----BEGIN MSGCRYPTED AES256 CBC----\nbla+bl/ubb\n----END MSGCRYPTED----\n\n" `B.append`
 				"----BEGIN SIGNATURE SHA256 RSA 8----\nbl/+ubb+/+lubb\n----END SIGNATURE----\n\n"
