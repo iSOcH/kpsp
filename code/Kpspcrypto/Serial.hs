@@ -14,6 +14,7 @@ asInt str = f . reverse $ B.unpack str
 		f (x:xs) = toInteger(ord x) + 256 * f xs
 
 asStr :: Integer -> B.ByteString
+asStr 0 = B.singleton '\0'
 asStr i = B.pack . reverse $ f i
 	where
 		f :: Integer -> [Char]
