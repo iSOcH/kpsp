@@ -81,3 +81,8 @@ expriv = (toStr 47, toStr 143)
 
 expub2 = (toStr 1721, toStr 263713)
 expriv2 = (toStr 1373, toStr 263713)
+
+smalltest :: Bool
+smalltest = and [checksig rsapubkey (sign rsaprivkey str) str | str <- map B.singleton ['0'..'z']]
+smalltest2 :: Bool
+smalltest2 = and [checksig rsarecvpubkey (sign rsarecvprivkey str) str | str <- map B.singleton ['0'..'z']]
