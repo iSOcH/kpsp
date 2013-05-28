@@ -58,7 +58,10 @@ rndStrs lengths gen = split lengths allrndstrs
 		allrndstrs = rndStr (sum lengths) gen
 
 rndStr :: Int -> StdGen -> B.ByteString
-rndStr 0 gen = ""
-rndStr n gen = chr rc `B.cons` rndStr (n-1) newgen
+rndStr n gen = B.pack $ rndCL n gen
+
+rndCL :: Int -> StdGen -> String
+rndCL 0 gen = ""
+rndCL n gen = chr rc : rndCL (n-1) newgen
 	where
 		(rc, newgen) = randomR (0,255) gen
