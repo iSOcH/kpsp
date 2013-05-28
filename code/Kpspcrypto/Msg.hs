@@ -16,13 +16,13 @@ sampleMsgStr = 	"----BEGIN KEYCRYPTED RSA 8----\nbla//+ba\n----END KEYCRYPTED---
 				"----BEGIN SIGNATURE SHA256 RSA 8----\nbl/+ubb+/+lubb\n----END SIGNATURE----\n\n"
 
 -- possible types of messageparts
-data MsgType = KEYCRYPTED | MSGCRYPTED | SIGNATURE deriving (Show, Read, Eq)
+data MsgType = KEYCRYPTED | MSGCRYPTED | SIGNATURE deriving (Show, Read, Eq, Ord)
 
 -- this can hold any type of messagepart
 data MsgPart = MsgPart	{	msgtype :: MsgType
 						,	options :: [B.ByteString]
 						,	content :: B.ByteString
-						} deriving (Read)
+						} deriving (Read, Eq)
 
 makeMsg :: (MsgType, [B.ByteString]) -> B.ByteString -> MsgPart
 makeMsg (msgtype, options) content = MsgPart msgtype options content
@@ -34,6 +34,10 @@ instance Show MsgPart where
 		"----\n" ++ B.unpack (content msg) ++ "\n" ++
 		"----END " ++ show (msgtype msg) ++ "----"
 -- alternative for intercalate: foldl (\acc option -> acc `B.append` " " `B.append` option) "" (options msg)
+
+-- make the msg sortable by type
+instance Ord MsgPart where
+	compare a b = compare (msgtype a) (msgtype b)
 
 -- interprets the first line of a msgpart
 -- TODO: make sure the first line actually starts with "----BEGIN "
