@@ -1,4 +1,4 @@
-module Kpspcrypto.Pad (pad, unpad, unpadblocks) where
+module Kpspcrypto.Pad (pad, unpad, unpadblocks, block) where
 
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
@@ -17,11 +17,14 @@ pad n input
 		padlen = n - B.length input
 		padchar = chr padlen
 
+block :: Int -> B.ByteString -> [B.ByteString]
+block n "" = []
+block n x = next : (block n rest)
+	where
+		(next,rest) = B.splitAt n x
+
 unpad :: Int -> B.ByteString -> B.ByteString
 unpad n input = unpadblocks $ block n input
-	where
-		block n "" = []
-		block n x = (B.take n x) : (block n (B.drop n x))
 
 unpadblocks :: [B.ByteString] -> B.ByteString
 -- last block: at least one byte is padding

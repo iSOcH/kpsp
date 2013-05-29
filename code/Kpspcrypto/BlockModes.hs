@@ -6,6 +6,8 @@ module Kpspcrypto.BlockModes where
 
 import qualified Data.ByteString.Char8 as B
 
+import Kpspcrypto.Pad
+
 type Block = B.ByteString
 type IV = Block
 
@@ -16,7 +18,13 @@ uncbc :: (Block -> Block) -> IV -> B.ByteString -> B.ByteString
 uncbc cipher iv crypt = id crypt
 
 ecb :: (Block -> Block) -> IV -> B.ByteString -> B.ByteString
-ecb cipher iv plain = id plain
+ecb cipher iv plain = B.concat [cipher pblock | pblock <- pblocks]
+	where
+		blocklen = B.length iv
+		pblocks = pad blocklen plain
 
 unecb :: (Block -> Block) -> IV -> B.ByteString -> B.ByteString
-unecb cipher iv crypt = id crypt
+unecb cipher iv crypt = unpadblocks [cipher cblock | cblock <- cblocks]
+	where
+		blocklen = B.length iv
+		cblocks = block blocklen crypt
