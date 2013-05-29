@@ -11,13 +11,20 @@ import Data.Word
 import Data.Bits
 import Data.Char
 
+import Kpspcrypto.Pad
+import Kpspcrypto.Serial
+
 -- apply SHA256 to given data, result will always be 32 bytes long
 hash :: B.ByteString -> B.ByteString 
-hash input = id input
+hash msg = B.concat $ map w2b h
+	where
+		h = foldl perchunk hs preprocessed
+		preprocessed = chunks $ preprocess msg
 
--- adds padding (in the form 0x70[00]*) until there are 4 bytes left for the size
-pad :: B.ByteString -> B.ByteString
-pad input = fill $ input `B.snoc` chr 0x70
+-- FIXME: the length has to be 8 bytes long, even if the higher-order bytes are 0x00
+-- adds padding (in the form 0x80[00]*) until there are 4 bytes left for the size
+shapad :: B.ByteString -> B.ByteString
+shapad input = fill $ input `B.snoc` chr 0x80
 	where
 		-- 56bytes are 448bits
 		fill unfilled
@@ -30,10 +37,9 @@ pad input = fill $ input `B.snoc` chr 0x70
 
 -- adds padding and size, output length will always be a multiple of 64 bytes
 preprocess :: B.ByteString -> B.ByteString
-preprocess input = pad input `B.append` lenAsBStr
+preprocess input = shapad input `B.append` lenAsBStr
 	where
-		len = B.length input
-		-- extracts bytes from Int and packs them into ByteString
+		len = 8 * B.length input --in bits
 		lenAsBStr = B.pack
 			[chr $ shiftR (len .&. 0xFF000000) 24
 			,chr $ shiftR (len .&. 0x00FF0000) 16
@@ -41,16 +47,55 @@ preprocess input = pad input `B.append` lenAsBStr
 			,chr $ len .&. 0x000000FF
 			]
 
-getChunks :: B.ByteString -> [B.ByteString]
-getChunks unchunked
-	| B.length unchunked > 64 = first : getChunks rest
-	| otherwise = [unchunked]
+perchunk :: [Word32] -> B.ByteString -> [Word32]
+perchunk curhash chunk = mainloop 0 expanded curhash
 	where
-		first = B.take 64 unchunked
-		rest = B.drop 64 unchunked
+		broken = map b2w $ block 4 chunk
+		expanded = expandwords broken
+
+mainloop :: Int -> [Word32] -> [Word32] -> [Word32]
+mainloop 64 _ h = h
+mainloop i w [a,b,c,d,e,f,g,h] = mainloop (i+1) w [temp2,a,b,c,newd,e,f,g]
+	where
+		s1 = (e `rotateR` 6) `xor` (e `rotateR` 11) `xor` (e `rotateR` 25)
+		ch = (e .&. f) `xor` ((complement e) .&. g)
+		temp = h + s1 + ch + ks!!i + w!!i
+		newd = d + temp;
+		s0 = (a `rotateR` 2) `xor` (a `rotateR` 13) `xor` (a `rotateR` 22)
+		maj = (a .&. (b `xor` c)) `xor` (b .&. c)
+		temp2 = temp + s0 + maj
+
+expandwords :: [Word32] -> [Word32]
+expandwords cw
+	| length cw == 64 = cw
+	| otherwise = expandwords $ cw ++ [newword cw]
+
+newword :: [Word32] -> Word32
+newword cw = cw!!(i-16) + s0 + cw!!(i-7) + s1
+	where
+		i = length cw
+		s0 = (cw!!(i-15) `rotateR` 7) `xor` (cw!!(i-15) `rotateR` 18) `xor` (cw!!(i-15) `shiftR` 3)
+		s1 = (cw!!(i-2) `rotateR` 17) `xor` (cw!!(i-2) `rotateR` 19) `xor` (cw!!(i-2) `shiftR` 10)
+
+-- converts 4 Bytes to a Word32
+b2w :: B.ByteString -> Word32
+b2w = fromInteger . asInt
+
+w2b :: Word32 -> B.ByteString
+w2b = asStr . toInteger
+
+-- break input into 512bit blocks
+chunks :: B.ByteString -> [B.ByteString]
+chunks = block 64
+
 {---
 Data
 ---}
+hs :: [Word32]
+hs =
+	[0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
+
+ks :: [Word32]
 ks = 
 	[0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5
 	,0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174
