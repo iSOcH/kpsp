@@ -15,6 +15,7 @@ import qualified Kpspcrypto.SHA256 as SHA
 import Kpspcrypto.Pad
 import Kpspcrypto.Msg 
 
+-- create a signature msgpart which contains the signed hash of the other msgparts
 genMsgPart :: AsymCipher -> AsymKey -> HashType -> [MsgPart] -> MsgPart
 genMsgPart "RSA" akey "SHA256" [kcpart,msgcpart] = MsgPart SIGNATURE ["RSA","SHA256"] signature
 	where
@@ -22,6 +23,7 @@ genMsgPart "RSA" akey "SHA256" [kcpart,msgcpart] = MsgPart SIGNATURE ["RSA","SHA
 		signed = map B64.encode [RSA.sign akey block | block <- pad 4 hashed] --TODO: groessere Keys, dann auf 8 Byte oder so anwenden
 		signature = B.intercalate "," signed
 
+-- verifies the signature of the whole msg
 verifySig :: AsymKey -> [MsgPart] -> Bool
 verifySig akey parts = and $ zipWith (checksig akey) bsigs bs
 	where
@@ -35,12 +37,17 @@ verifySig akey parts = and $ zipWith (checksig akey) bsigs bs
 		checksig = fromJust $ M.lookup sigtype checksigs
 		hashf = fromJust $ M.lookup hashtype hashfs
 
+-- contains the hashfunctions, key is the value of the option in the MsgPart-Header
 hashfs :: M.Map HashType (B.ByteString -> B.ByteString)
 hashfs = M.fromList [("SHA256",SHA.hash)]
 
+-- contains the "check signature" functions, key is the value of the option in the MsgPart-Header
 checksigs :: M.Map AsymCipher (AsymKey -> B.ByteString -> B.ByteString -> Bool)
 checksigs = M.fromList [("RSA",RSA.checksig)]
 
+{--------------------
+sample data and tests
+--------------------}
 rsapubkey = "----BEGIN RSA PUBLIC KEY----\nBrk=,BAYh\n----END RSA PUBLIC KEY----" :: B.ByteString
 rsaprivkey = "----BEGIN RSA PRIVATE KEY----\nBV0=,BAYh\n----END RSA PRIVATE KEY----" :: B.ByteString
 
