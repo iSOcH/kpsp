@@ -21,19 +21,17 @@ hash msg = B.concat $ map w2b h
 		h = foldl perchunk hs preprocessed
 		preprocessed = chunks $ preprocess msg
 
--- FIXME: the length has to be 8 bytes long, even if the higher-order bytes are 0x00
 -- adds padding (in the form 0x80[00]*) until there are 4 bytes left for the size
 shapad :: B.ByteString -> B.ByteString
 shapad input = fill $ input `B.snoc` chr 0x80
 	where
 		-- 56bytes are 448bits
 		fill unfilled
-			-- we fill up to 60 bytes because B.length only gives us 32bit
-			| lenmod == 60 = unfilled
+			| lenmod == 56 = unfilled
 			| otherwise = unfilled `B.append` B.replicate remaining '\0'
 		lenmod = (B.length input) + 1 `mod` 64 -- +1 because we already added a byte
-		--124 because 62 `mod` 64 results in -2, which we cant use for replicate
-		remaining = (124 - lenmod) `mod` 64
+		--120 because 62 `mod` 64 results in -2, which we cant use for replicate
+		remaining = (120 - lenmod) `mod` 64
 
 -- adds padding and size, output length will always be a multiple of 64 bytes
 preprocess :: B.ByteString -> B.ByteString
@@ -41,7 +39,8 @@ preprocess input = shapad input `B.append` lenAsBStr
 	where
 		len = 8 * B.length input --in bits
 		lenAsBStr = B.pack
-			[chr $ shiftR (len .&. 0xFF000000) 24
+			['\NUL','\NUL','\NUL','\NUL'
+			,chr $ shiftR (len .&. 0xFF000000) 24
 			,chr $ shiftR (len .&. 0x00FF0000) 16
 			,chr $ shiftR (len .&. 0x0000FF00) 8
 			,chr $ len .&. 0x000000FF
@@ -66,6 +65,7 @@ mainloop i w [a,b,c,d,e,f,g,h] = mainloop (i+1) w [temp2,a,b,c,newd,e,f,g]
 		maj = (a .&. (b `xor` c)) `xor` (b .&. c)
 		temp2 = temp + s0 + maj
 
+-- expands the 16 Word32s to 64 Word32s, according to SHA256 spec
 expandwords :: [Word32] -> [Word32]
 expandwords cw
 	| length cw == 64 = cw
