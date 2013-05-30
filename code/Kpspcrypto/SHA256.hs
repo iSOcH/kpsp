@@ -46,6 +46,7 @@ preprocess input = shapad input `B.append` lenAsBStr
 			,chr $ len .&. 0x000000FF
 			]
 
+-- prepares a chunk, executes mainloop and adds the result to the hash so far
 perchunk :: [Word32] -> B.ByteString -> [Word32]
 perchunk curhash chunk = zipWith (+) curhash looped
 	where
@@ -53,6 +54,7 @@ perchunk curhash chunk = zipWith (+) curhash looped
 		expanded = expandwords broken
 		looped = mainloop 0 expanded curhash
 
+-- executes 64 SHA2-Rounds on a chunk
 mainloop :: Int -> [Word32] -> [Word32] -> [Word32]
 mainloop 64 _ h = h
 mainloop i w [a,b,c,d,e,f,g,h] = mainloop (i+1) w [temp2,a,b,c,newd,e,f,g]
@@ -71,6 +73,7 @@ expandwords cw
 	| length cw == 64 = cw
 	| otherwise = expandwords $ cw ++ [newword cw]
 
+-- creates the next Word for the expansion
 newword :: [Word32] -> Word32
 newword cw = cw!!(i-16) + s0 + cw!!(i-7) + s1
 	where
