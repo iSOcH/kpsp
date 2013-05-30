@@ -27,7 +27,7 @@ verifySig akey parts = and $ zipWith (checksig akey) bsigs bs
 	where
 		[kpart,mpart,spart] = sort parts
 		[k,m,s] = map content [kpart,mpart,spart]
-		msgh = hashf k `B.append` m
+		msgh = hashf $ k `B.append` m
 		bsigs = [B64.decode block | block <- B.split ',' s]
 		bs = pad 1 msgh
 		sigtype = options spart !! 0
