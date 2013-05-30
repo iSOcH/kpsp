@@ -48,10 +48,11 @@ preprocess input = shapad input `B.append` lenAsBStr
 			]
 
 perchunk :: [Word32] -> B.ByteString -> [Word32]
-perchunk curhash chunk = mainloop 0 expanded curhash
+perchunk curhash chunk = zipWith (+) curhash looped
 	where
 		broken = map b2w $ block 4 chunk
 		expanded = expandwords broken
+		looped = mainloop 0 expanded curhash
 
 mainloop :: Int -> [Word32] -> [Word32] -> [Word32]
 mainloop 64 _ h = h
