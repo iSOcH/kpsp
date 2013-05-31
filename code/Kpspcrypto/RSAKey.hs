@@ -17,8 +17,8 @@ genK rgen = (genPrivK rgen, genPubK rgen)
 genPrivK :: StdGen -> Privkey
 genPrivK rgen = begin `B.append`  toStr2 (getD $ genKeys rgen) `B.append` ","  `B.append` toStr2 (getN $ genKeys rgen) `B.append` end
 		where 
-			begin = "----BEGIN RSA PRIVATE KEY----"
-			end = "----END RSA PRIVATE KEY----"
+			begin = "----BEGIN RSA PRIVATE KEY----\n"
+			end = "\n----END RSA PRIVATE KEY----"
 			getN :: (Integer, Integer) -> Integer
 			getN (_, n) = n			
 			getD :: (Integer, Integer) -> Integer
@@ -27,8 +27,8 @@ genPrivK rgen = begin `B.append`  toStr2 (getD $ genKeys rgen) `B.append` ","  `
 genPubK :: StdGen -> Pubkey
 genPubK rgen = begin `B.append`  toStr2 65537  `B.append` ","  `B.append` toStr2 (getN $ genKeys rgen) `B.append` end
 		where 
-			begin = "----BEGIN RSA PUBLIC KEY----"
-			end = "----END RSA PUBLIC KEY----"
+			begin = "----BEGIN RSA PUBLIC KEY----\n"
+			end = "\n----END RSA PUBLIC KEY----"
 			getN :: (Integer, Integer) -> Integer
 			getN (_, n) = n
 
@@ -36,19 +36,12 @@ genPubK rgen = begin `B.append`  toStr2 65537  `B.append` ","  `B.append` toStr2
 genKeys :: StdGen -> (Integer, Integer)
 genKeys rgen = (d, n)
 		where 
-			p = helperF !! getP
-			q = helperF !! getQ
-		--	p = head helperF
-		--	q = head (drop 1 helperF)
-			helperF = genPrime
+			p = head $ genPrime getP
+			q = head $ genPrime getQ
+			(getP, newGen) = (randomR (2^32, 2^33-1) rgen)  -- different range for p and q to ensure p!=q
+			(getQ, newGen') = (randomR (2^33, 2^34) newGen)
 			d = genD p q
-			n = genModuleN p q 
-			(getP, newGen) = (randomR (1, 49605) rgen)
-			(getQ, newGen') = (randomR (1, 49606) newGen)
-	
---create RSA-Modul (N = q*p)
-genModuleN :: P -> Q -> Integer
-genModuleN p q = if p /= q && p*q > 4294967296 then p*q else genModuleN p q
+			n = p*q 
 
 
 --calculate d (decoding) e * d = 1 mod phi(N)
@@ -73,9 +66,10 @@ extendedEuclid a b
 --						(d,s,t) = extendedEuclid b (a `mod` b)
 
 --create a list containing primes to get random p and q
-genPrime :: [Integer]
---genPrime = [x | x <- 700002:700003:[700005, 700007..7000000], isPrime x] n > 32 bit
-genPrime = [x | x <- 4294967295:4294967297:[4294967299, 4294967301..4295967301], isPrime x] -- n > 64 bit
+genPrime :: Integer -> [Integer]
+genPrime n = if even n then genPrime (n+1) else [x | x <- [n,n+2..], isPrime x]
+		
+
 
 isPrime :: Integer -> Bool
 isPrime x = null [y | y <- takeWhile (\y -> y*y <= x) [2..], x `mod` y == 0]
