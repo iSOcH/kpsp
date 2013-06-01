@@ -1,4 +1,4 @@
-module Kpspcrypto.RSAKey where
+module Kpspcrypto.RSAKey (genK) where
 
 import qualified Data.ByteString.Char8 as B
 import System.Random
@@ -15,7 +15,7 @@ genK :: StdGen -> (Privkey, Pubkey)
 genK rgen = (genPrivK rgen, genPubK rgen)
 
 genPrivK :: StdGen -> Privkey
-genPrivK rgen = begin `B.append`  toStr2 (getD $ genKeys rgen) `B.append` ","  `B.append` toStr2 (getN $ genKeys rgen) `B.append` end
+genPrivK rgen = begin `B.append`  toStr (getD $ genKeys rgen) `B.append` ","  `B.append` toStr (getN $ genKeys rgen) `B.append` end
 		where 
 			begin = "----BEGIN RSA PRIVATE KEY----\n"
 			end = "\n----END RSA PRIVATE KEY----"
@@ -25,7 +25,7 @@ genPrivK rgen = begin `B.append`  toStr2 (getD $ genKeys rgen) `B.append` ","  `
 			getD (d, _) = d
 			
 genPubK :: StdGen -> Pubkey
-genPubK rgen = begin `B.append`  toStr2 65537  `B.append` ","  `B.append` toStr2 (getN $ genKeys rgen) `B.append` end
+genPubK rgen = begin `B.append`  toStr 65537  `B.append` ","  `B.append` toStr (getN $ genKeys rgen) `B.append` end
 		where 
 			begin = "----BEGIN RSA PUBLIC KEY----\n"
 			end = "\n----END RSA PUBLIC KEY----"
@@ -38,8 +38,8 @@ genKeys rgen = (d, n)
 		where 
 			p = head $ genPrime getP
 			q = head $ genPrime getQ
-			(getP, newGen) = (randomR (2^32, 2^33-1) rgen)  -- different range for p and q to ensure p!=q
-			(getQ, newGen') = (randomR (2^33, 2^34) newGen)
+			(getP, newGen) = (randomR (2^34, 2^35-1) rgen)  -- different range for p and q to ensure p!=q
+			(getQ, newGen') = (randomR (2^35, 2^37) newGen)
 			d = genD p q
 			n = p*q 
 
@@ -76,5 +76,5 @@ isPrime x = null [y | y <- takeWhile (\y -> y*y <= x) [2..], x `mod` y == 0]
 
 
 -- converts an Integer to Base64 encoded ByteString
-toStr2 :: Integer -> B.ByteString
-toStr2 = B64.encode . asStr
+toStr :: Integer -> B.ByteString
+toStr = B64.encode . asStr

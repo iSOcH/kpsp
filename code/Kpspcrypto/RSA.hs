@@ -5,8 +5,6 @@ module Kpspcrypto.RSA (encrypt, sign, decrypt, checksig) where
 {-# LANGUAGE OverloadedStrings #-}
 
 import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Binary as DB
 import qualified Kpspcrypto.Base64 as B64
 import Kpspcrypto.Serial
 
