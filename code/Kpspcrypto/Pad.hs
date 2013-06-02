@@ -46,5 +46,8 @@ unpadblocks (x:xs) = x `B.append` unpadblocks xs
 {----
 tests
 ----}
---runTests :: Bool
---runTests = 
+runTests :: Bool
+runTests = and [(unpad len $ B.concat $ pad len s) == s | s <- testInputs, len <- [1..30]]
+
+testInputs :: [B.ByteString]
+testInputs = [B.replicate i 'a' | i <- [1..200]]
