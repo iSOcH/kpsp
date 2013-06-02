@@ -75,21 +75,28 @@ rndCL n gen = chr rc : rndCL (n-1) newgen
 {----
 tests
 ----}
-mcontent = "the very secret and hopefully somewhat protected plaintext" :: B.ByteString
+contents :: [B.ByteString]
+contents = 	["the very secret and hopefully somewhat protected plaintext"
+			,"another, shorter text"
+			,""
+			,B.replicate 1000 't'
+			]
 
 testAESECB :: Bool
-testAESECB = and [mcontent == getPlain (key m) (msg m) | m <- msgskeys]
+testAESECB = and [plain m == getPlain (key m) (msg m) | m <- msgskeys]
 	where
-		msgskeys = [genMsgPart rnd "AES256" "ECB" mcontent | rnd <- rnds]
-		msg = fst
-		key = snd
+		msgskeys = [(genMsgPart rnd "AES256" "ECB" cont,cont) | rnd <- rnds, cont <- contents]
+		msg = fst . fst
+		key = snd . fst
+		plain = snd
 
 testAESCBC :: Bool
-testAESCBC = and [mcontent == getPlain (key m) (msg m) | m <- msgskeys]
+testAESCBC = and [plain m == getPlain (key m) (msg m) | m <- msgskeys]
 	where
-		msgskeys = [genMsgPart rnd "AES256" "CBC" mcontent | rnd <- rnds]
-		msg = fst
-		key = snd
+		msgskeys = [(genMsgPart rnd "AES256" "CBC" cont,cont) | rnd <- rnds, cont <- contents]
+		msg = fst . fst
+		key = snd . fst
+		plain = snd
 
 rnds :: [StdGen]
-rnds = [mkStdGen i | i <- [0..1000]]
+rnds = [mkStdGen i | i <- [13..113]]
