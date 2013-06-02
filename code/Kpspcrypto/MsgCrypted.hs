@@ -1,4 +1,4 @@
-module Kpspcrypto.MsgCrypted where
+module Kpspcrypto.MsgCrypted (genMsgPart, getPlain) where
 
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
