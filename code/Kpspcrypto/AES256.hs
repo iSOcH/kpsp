@@ -51,4 +51,30 @@ w1282b s = B.replicate (16-clen) '\0' `B.append` converted
 {----
 tests
 ----}
+key1 = "justAKeyjustBKey" :: B.ByteString
+key2 = "justBKeyjustAKey" :: B.ByteString
 
+e1 = encode key1
+e2 = encode key2
+d1 = decode key1
+d2 = decode key2
+
+runTests :: Bool
+runTests = and [testAES test | test <- tests]
+
+testAES :: (Block,(Block->Block->Bool),(Block->Block),(Block->Block)) -> Bool
+testAES (plain,eq,e,d) = plain `eq` (d $ e plain)
+
+tests :: [(Block,(Block->Block->Bool),(Block->Block),(Block->Block))]
+tests = [(empty,(==),e1,d1)
+		,(empty,(/=),e1,d2)
+		,(empty,(/=),e2,d1)
+		,(empty,(==),e2,d2)
+		,(as,(==),e1,d1)
+		,(as,(/=),e1,d2)
+		,(as,(/=),e2,d1)
+		,(as,(==),e2,d2)
+		]
+	where
+		empty = B.replicate 16 '\0'
+		as = B.replicate 16 'a'
