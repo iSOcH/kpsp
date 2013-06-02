@@ -19,7 +19,7 @@ main = do
 	
 handleArgs :: [B.ByteString] -> IO()
 handleArgs args = do	
-	if length args /= 6 then do
+	if length args /= 7 then do
 		printUsage
 	else do
 		let asym = args !! 0
@@ -38,9 +38,8 @@ handleArgs args = do
 		let plainS = [kMsgPart,mMsgPart]
 		let sMsgPart = S.genMsgPart asym privkey hash $ plainS  --generates the signature
 		let msgParts = map (B.pack . show) [kMsgPart,mMsgPart,sMsgPart]
-		B.writeFile (B.unpack infile ++ "Encrypted") $ B.intercalate "\n\n" msgParts^
+		B.writeFile (B.unpack infile ++ "Encrypted") $ B.intercalate "\n\n" msgParts
 
-		
 printUsage :: IO()
 printUsage = do
 	putStrLn "you need to call this binary in this way:"
