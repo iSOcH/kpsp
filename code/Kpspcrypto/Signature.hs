@@ -20,7 +20,7 @@ genMsgPart :: AsymCipher -> AsymKey -> HashType -> [MsgPart] -> MsgPart
 genMsgPart "RSA" akey "SHA256" [kcpart,msgcpart] = MsgPart SIGNATURE ["RSA","SHA256"] signature
 	where
 		hashed = SHA.hash $ B.concat [content kcpart, content msgcpart]
-		signed = map B64.encode [RSA.sign akey blocks | blocks <- block 4 hashed] --TODO: groessere Keys, dann auf 8 Byte oder so anwenden
+		signed = map B64.encode [RSA.sign akey blocks | blocks <- block 6 hashed]
 		signature = B.intercalate "," signed
 		
 
@@ -32,7 +32,7 @@ verifySig akey parts = and $ zipWith (checksig akey) bsigs bs
 		[k,m,s] = map content [kpart,mpart,spart]
 		msgh = hashf $ k `B.append` m
 		bsigs = [B64.decode block | block <- B.split ',' s]
-		bs = pad 4 msgh
+		bs = block 6 msgh
 		sigtype = options spart !! 0
 		hashtype = options spart !! 1
 		checksig = fromJust $ M.lookup sigtype checksigs
@@ -49,15 +49,18 @@ checksigs = M.fromList [("RSA",RSA.checksig)]
 {--------------------
 sample data and tests
 --------------------}
-rsapubkey = "----BEGIN RSA PUBLIC KEY----\nBrk=,BAYh\n----END RSA PUBLIC KEY----" :: B.ByteString
-rsaprivkey = "----BEGIN RSA PRIVATE KEY----\nBV0=,BAYh\n----END RSA PRIVATE KEY----" :: B.ByteString
-
--- reicht für 4 bytes :)
-rsapriv2 = "----BEGIN RSA PRIVATE KEY----\nzFEWC0E=,AQro6bcX\n----END RSA PRIVATE KEY----" :: B.ByteString
-rsapub2 = "----BEGIN RSA PUBLIC KEY----\nAQAB,AQro6bcX\n----END RSA PUBLIC KEY----" :: B.ByteString
-
-simplesigtest = verifySig rsapub2 [msgcpart, sigpart, kcpart]
+runTests :: Bool
+runTests = and [verifySig pub $ (genMsgPart "RSA" priv "SHA256" otherparts) : otherparts | (pub,priv) <- keys]
 	where
-		kcpart = MsgPart KEYCRYPTED ["RSA"] "ourkey"
-		msgcpart = MsgPart MSGCRYPTED ["SHA256","CBC"] "ourdata"
-		sigpart = genMsgPart "RSA" rsapriv2 "SHA256" [kcpart, msgcpart]
+		otherparts = [kcpart,msgcpart]
+		kcpart = MsgPart KEYCRYPTED ["RSA"] "ourkeyourkeyourkeyourkeyourkey"
+		msgcpart = MsgPart MSGCRYPTED ["SHA256","CBC"] "ourdataourdataourdataourdataourdata"
+
+keys :: [(B.ByteString,B.ByteString)]
+keys =	[("----BEGIN RSA PUBLIC KEY----\nAQAB,iUdRIBeyL3qX\n----END RSA PUBLIC KEY----"
+		 ,"----BEGIN RSA PRIVATE KEY----\nH0vn/c/pBfHZ,iUdRIBeyL3qX\n----END RSA PRIVATE KEY----")
+		,("----BEGIN RSA PUBLIC KEY----\nAQAB,Y9G9TSdJNf0j\n----END RSA PUBLIC KEY----"
+		 ,"----BEGIN RSA PRIVATE KEY----\nH0jRB6FRS9Th,Y9G9TSdJNf0j\n----END RSA PRIVATE KEY----")
+		,("----BEGIN RSA PUBLIC KEY----\nAQAB,Lfh0qKrNlchv\n----END RSA PUBLIC KEY----"
+		 ,"----BEGIN RSA PRIVATE KEY----\nEVl5vcC88PQh,Lfh0qKrNlchv\n----END RSA PRIVATE KEY----")
+		]
