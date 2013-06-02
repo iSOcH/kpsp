@@ -20,8 +20,9 @@ genMsgPart :: AsymCipher -> AsymKey -> HashType -> [MsgPart] -> MsgPart
 genMsgPart "RSA" akey "SHA256" [kcpart,msgcpart] = MsgPart SIGNATURE ["RSA","SHA256"] signature
 	where
 		hashed = SHA.hash $ B.concat [content kcpart, content msgcpart]
-		signed = map B64.encode [RSA.sign akey block | block <- pad 4 hashed] --TODO: groessere Keys, dann auf 8 Byte oder so anwenden
+		signed = map B64.encode [RSA.sign akey blocks | blocks <- block 4 hashed] --TODO: groessere Keys, dann auf 8 Byte oder so anwenden
 		signature = B.intercalate "," signed
+		
 
 -- verifies the signature of the whole msg
 verifySig :: AsymKey -> [MsgPart] -> Bool

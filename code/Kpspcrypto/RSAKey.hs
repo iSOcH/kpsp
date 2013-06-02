@@ -20,9 +20,9 @@ genPrivK rgen = begin `B.append`  toStr (getD $ genKeys rgen) `B.append` ","  `B
 			begin = "----BEGIN RSA PRIVATE KEY----\n"
 			end = "\n----END RSA PRIVATE KEY----"
 			getN :: (Integer, Integer) -> Integer
-			getN (_, n) = n			
+			getN (_, n) = n		--oder getN = snd	
 			getD :: (Integer, Integer) -> Integer
-			getD (d, _) = d
+			getD (d, _) = d		--oder getD = fst
 			
 genPubK :: StdGen -> Pubkey
 genPubK rgen = begin `B.append`  toStr 65537  `B.append` ","  `B.append` toStr (getN $ genKeys rgen) `B.append` end
@@ -30,7 +30,7 @@ genPubK rgen = begin `B.append`  toStr 65537  `B.append` ","  `B.append` toStr (
 			begin = "----BEGIN RSA PUBLIC KEY----\n"
 			end = "\n----END RSA PUBLIC KEY----"
 			getN :: (Integer, Integer) -> Integer
-			getN (_, n) = n
+			getN = snd
 
 
 genKeys :: StdGen -> (Integer, Integer)
