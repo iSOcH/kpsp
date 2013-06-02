@@ -43,15 +43,15 @@ getPlain key msg = (fromJust $ M.lookup cipher decodingfunctions) key msg
 
 -- decodes the content of a part encrypted using AES
 getPlainFromAES :: Key -> MsgPart -> B.ByteString
-getPlainFromAES key msg = (modef (AES.decode key) iv) . B64.decode $ cont
+getPlainFromAES key msg = (modef (AES.decode key) iv) cont
 	where
 		mode = options msg !! 1
 		-- find the function which "unapplies" the block-chaining mode
 		modef = fromJust $ M.lookup mode modes
 		-- for ecb we have to supply a pseudo-iv, for cbc the iv is
 		-- part of the content of the msgpart
-		[iv, cont]	| mode == "ECB" = [B.replicate 16 '\0', content msg]
-					| mode == "CBC" = B.split ',' $ content msg
+		[iv, cont]	| mode == "ECB" = [B.replicate 16 '\0', B64.decode $ content msg]
+					| mode == "CBC" = map B64.decode $ B.split ',' $ content msg
 
 -- maps the option-value in the msgpart-header to the function
 -- responsible for decoding a part
@@ -94,11 +94,14 @@ rndCL n gen = chr rc : rndCL (n-1) newgen
 {----
 tests
 ----}
+runTests :: Bool
+runTests = and [testAESECB,testAESCBC]
+
 contents :: [B.ByteString]
 contents = 	["the very secret and hopefully somewhat protected plaintext"
 			,"another, shorter text"
 			,""
-			,B.replicate 10000 't'
+			,B.replicate 5000 't'
 			]
 
 testAESECB :: Bool
@@ -118,4 +121,4 @@ testAESCBC = and [plain m == getPlain (key m) (msg m) | m <- msgskeys]
 		plain = snd
 
 rnds :: [StdGen]
-rnds = [mkStdGen i | i <- [13..113]]
+rnds = [mkStdGen i | i <- [13..63]]

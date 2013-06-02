@@ -14,7 +14,7 @@ type Block = B.ByteString
 type IV = Block
 
 cbc :: (Block -> Block) -> IV -> B.ByteString -> B.ByteString
-cbc cipher iv plain = B.concat $ docbc cipher iv $ block blocklen plain
+cbc cipher iv plain = B.concat $ docbc cipher iv $ pad blocklen plain
 	where
 		blocklen = B.length iv
 
@@ -28,7 +28,7 @@ docbc cipher iv (x:xs) = cblock : docbc cipher cblock xs
 		cblock = cipher ivxorb
 
 uncbc :: (Block -> Block) -> IV -> B.ByteString -> B.ByteString
-uncbc cipher iv crypt = B.concat $ douncbc cipher iv $ block blocklen crypt
+uncbc cipher iv crypt = unpadblocks $ douncbc cipher iv $ block blocklen crypt
 	where
 		blocklen = B.length iv
 
