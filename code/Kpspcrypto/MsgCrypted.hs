@@ -20,6 +20,8 @@ type Key = B.ByteString
 type SymCipher = B.ByteString
 type ChainMode = B.ByteString
 
+-- create a MSGCRYPTED-part using a random IV and a random Key, also
+-- returns the used key for further usage (in the KEYCRYPTED part)
 genMsgPart :: StdGen -> SymCipher -> ChainMode -> B.ByteString -> (MsgPart, Key)
 genMsgPart rgen "AES256" "CBC" plain = (MsgPart MSGCRYPTED ["AES256","CBC"] (ivenc `B.append` "," `B.append` plainenc), key)
 	where
@@ -33,29 +35,39 @@ genMsgPart rgen "AES256" "ECB" plain = (MsgPart MSGCRYPTED ["AES256","ECB"] plai
 		--only length matters, must be the same as the blocksize of the cipher
 		iv = B.replicate 16 '\0'
 
-
+-- decodes the content of a MSGCRYPTED-part using the supplied key
 getPlain :: Key -> MsgPart -> B.ByteString
-getPlain key msg = (fromJust $ M.lookup cipher plains) key msg
+getPlain key msg = (fromJust $ M.lookup cipher decodingfunctions) key msg
 	where
 		cipher = head $ options msg
 
+-- decodes the content of a part encrypted using AES
 getPlainFromAES :: Key -> MsgPart -> B.ByteString
 getPlainFromAES key msg = (modef (AES.decode key) iv) . B64.decode $ cont
 	where
 		mode = options msg !! 1
+		-- find the function which "unapplies" the block-chaining mode
 		modef = fromJust $ M.lookup mode modes
+		-- for ecb we have to supply a pseudo-iv, for cbc the iv is
+		-- part of the content of the msgpart
 		[iv, cont]	| mode == "ECB" = [B.replicate 16 '\0', content msg]
 					| mode == "CBC" = B.split ',' $ content msg
 
-plains :: M.Map B.ByteString (Key -> MsgPart -> B.ByteString)
-plains = M.fromList [("AES256", getPlainFromAES)]
+-- maps the option-value in the msgpart-header to the function
+-- responsible for decoding a part
+decodingfunctions :: M.Map B.ByteString (Key -> MsgPart -> B.ByteString)
+decodingfunctions = M.fromList [("AES256", getPlainFromAES)]
 
+-- maps the option-value in the msgpart-header to the function
+-- responsible for "unapplying" the block-chaining
 modes :: M.Map B.ByteString ((Block -> Block) -> IV -> B.ByteString -> B.ByteString)
 modes = M.fromList [("CBC",uncbc), ("ECB",unecb)]
 
 {-------------------------------
 creating random keys, ivs etc...
 -------------------------------}
+-- takes a list of lengths and returns random ByteStrings with
+-- these lengths created using the supplied random generator
 rndStrs :: [Int] -> StdGen -> [B.ByteString]
 rndStrs lengths gen = split lengths allrndstrs
 	where
@@ -63,9 +75,16 @@ rndStrs lengths gen = split lengths allrndstrs
 		split (len:lens) tosplit = B.take len tosplit : (split lens (B.drop len tosplit))
 		allrndstrs = rndStr (sum lengths) gen
 
+-- creates a random ByteString with given length using the
+-- supplied random generator
 rndStr :: Int -> StdGen -> B.ByteString
 rndStr n gen = B.pack $ rndCL n gen
 
+-- creates a random String with given length using the
+-- supplied random generator
+-- the reason for creating this method is that prepending
+-- single Chars to [Char] is way faster (O(1)) the same operation
+-- than on a ByteString (O(n))
 rndCL :: Int -> StdGen -> String
 rndCL 0 gen = ""
 rndCL n gen = chr rc : rndCL (n-1) newgen
@@ -79,7 +98,7 @@ contents :: [B.ByteString]
 contents = 	["the very secret and hopefully somewhat protected plaintext"
 			,"another, shorter text"
 			,""
-			,B.replicate 1000 't'
+			,B.replicate 10000 't'
 			]
 
 testAESECB :: Bool
