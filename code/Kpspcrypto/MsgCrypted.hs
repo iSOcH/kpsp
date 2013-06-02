@@ -26,11 +26,12 @@ genMsgPart rgen "AES256" "CBC" plain = (MsgPart MSGCRYPTED ["AES256","CBC"] (ive
 		[key,iv] = rndStrs [32,16] rgen
 		plainenc = B64.encode $ (cbc (AES.encode key) iv) plain
 		ivenc = B64.encode iv
-genMsgPart rgen "AES256" "ECB" plain = (MsgPart MSGCRYPTED ["AES256","ECB"] (ivenc `B.append` "," `B.append` plainenc), key)
+genMsgPart rgen "AES256" "ECB" plain = (MsgPart MSGCRYPTED ["AES256","ECB"] plainenc, key)
 	where
-		[key,iv] = rndStrs [32,16] rgen
+		key = rndStr 32 rgen
 		plainenc = B64.encode $ (ecb (AES.encode key) iv) plain
-		ivenc = B64.encode iv
+		--only length matters, must be the same as the blocksize of the cipher
+		iv = B.replicate 16 '\0'
 
 
 getPlain :: Key -> MsgPart -> B.ByteString
