@@ -26,6 +26,11 @@ genMsgPart rgen "AES256" "CBC" plain = (MsgPart MSGCRYPTED ["AES256","CBC"] (ive
 		[key,iv] = rndStrs [32,16] rgen
 		plainenc = B64.encode $ (cbc (AES.encode key) iv) plain
 		ivenc = B64.encode iv
+genMsgPart rgen "AES256" "ECB" plain = (MsgPart MSGCRYPTED ["AES256","ECB"] (ivenc `B.append` "," `B.append` plainenc), key)
+	where
+		[key,iv] = rndStrs [32,16] rgen
+		plainenc = B64.encode $ (ecb (AES.encode key) iv) plain
+		ivenc = B64.encode iv
 
 
 getPlain :: Key -> MsgPart -> B.ByteString
@@ -65,3 +70,25 @@ rndCL 0 gen = ""
 rndCL n gen = chr rc : rndCL (n-1) newgen
 	where
 		(rc, newgen) = randomR (0,255) gen
+
+{----
+tests
+----}
+mcontent = "the very secret and hopefully somewhat protected plaintext" :: B.ByteString
+
+testAESECB :: Bool
+testAESECB = and [mcontent == getPlain (key m) (msg m) | m <- msgskeys]
+	where
+		msgskeys = [genMsgPart rnd "AES256" "ECB" mcontent | rnd <- rnds]
+		msg = fst
+		key = snd
+
+testAESCBC :: Bool
+testAESCBC = and [mcontent == getPlain (key m) (msg m) | m <- msgskeys]
+	where
+		msgskeys = [genMsgPart rnd "AES256" "CBC" mcontent | rnd <- rnds]
+		msg = fst
+		key = snd
+
+rnds :: [StdGen]
+rnds = [mkStdGen i | i <- [0..1000]]
