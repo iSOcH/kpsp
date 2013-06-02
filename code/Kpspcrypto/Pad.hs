@@ -42,3 +42,9 @@ unpadblocks [x] = B.take padlen x
 		padlen = n - (ord $ B.last x)
 -- not the last block: recursion on following blocks
 unpadblocks (x:xs) = x `B.append` unpadblocks xs
+
+{----
+tests
+----}
+--runTests :: Bool
+--runTests = 
