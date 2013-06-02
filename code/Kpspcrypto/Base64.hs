@@ -34,16 +34,23 @@ decode encoded = B.take resultlen decWithTrash
 {---------------
 encoding helpers
 ---------------}
+
+-- recursively substitute 3 bytes with the 4 bytes
+-- that result from Base64-encoding
+-- the padding length is required for marking the
+-- amount of added padding in the final output
 encodeR :: (B.ByteString, Int) -> B.ByteString
--- encodeR B.empty = ... gives ghc error "Qualified name in binding position"
+encodeR ("",_) = ""
 encodeR (x,padlen)
-	| x == B.empty = x
-	| B.length x /= 3 || padlen == 0 = subs (B.take 3 x) `B.append` encodeR ((B.drop 3 x), padlen)
+	| B.length x /= 3 || padlen == 0 = subs next `B.append` encodeR (rest, padlen)
 	-- otherwise: last 3 bytes and we have padding
 	| otherwise =
 		if padlen == 1 then B.init (subs x) `B.append` "="
-		else B.init (B.init (subs x)) `B.append` "=="
+		else B.take 2 (subs x) `B.append` "=="
 	where
+		(next,rest) = B.splitAt 3 x
+		-- convert to 6-bit-values, find the corresponding char and
+		-- convert the [Char] to a ByteString
 		subs input = B.pack $ map (table V.!) (toB64BitGroups input)
 			
 -- splits a ByteString (with length 3) into four 6-bit values
@@ -89,11 +96,15 @@ unpad x = (
 	where
 		padlen = B.length (B.dropWhile (/= '=') x)
 
+-- recursively substitute 4 "Base64-Bytes" with 3 Bytes from
+-- the plaintext which was encoded
 decodeR :: B.ByteString -> B.ByteString
-decodeR x
-	| x == B.empty = x
-	| otherwise = subs (B.take 4 x) `B.append` decodeR (B.drop 4 x)
+decodeR "" = ""
+decodeR x = subs next `B.append` decodeR rest
 	where
+		(next,rest) = B.splitAt 4 x
+		-- convert ByteString to [Char], restore the original 4
+		-- 6-bit-values and convert them to the original 3 Bytes
 		subs input = fromB64BitGroups [fromJust (M.lookup c tableR) | c <- B.unpack input]
 
 -- contains the 6bit-values for the allowed chars in Base64 encoded data
