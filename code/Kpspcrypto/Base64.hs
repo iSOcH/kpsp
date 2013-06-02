@@ -34,7 +34,6 @@ decode encoded = B.take resultlen decWithTrash
 {---------------
 encoding helpers
 ---------------}
-
 -- recursively substitute 3 bytes with the 4 bytes
 -- that result from Base64-encoding
 -- the padding length is required for marking the
