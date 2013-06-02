@@ -38,7 +38,7 @@ handleArgs args = do
 		let plainS = [kMsgPart,mMsgPart]
 		let sMsgPart = S.genMsgPart asym privkey hash $ plainS  --generates the signature
 		let msgParts = map (B.pack . show) [kMsgPart,mMsgPart,sMsgPart]
-		B.writeFile (B.unpack infile ++ "Encrypted") $ B.intercalate "\n\n" msgParts
+		B.writeFile (B.unpack infile ++ "Encrypted") $ B.intercalate "\n\n" msgParts^
 
 		
 printUsage :: IO()
