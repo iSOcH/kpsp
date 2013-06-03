@@ -4,6 +4,13 @@ module Kpspcrypto.AES256 (encode, decode) where
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}
 
+{--
+this module uses Codec.Encryption.AES from the "crypto"-Package
+to perform the actual encryption and decryption functions
+the Word128-Interface of Codec.Encryption.AES is converted to
+a simpler to use Interface using ByteStrings
+--}
+
 import qualified Data.ByteString.Char8 as B
 import qualified Codec.Encryption.AES as CEAES
 import Data.Word
@@ -51,30 +58,45 @@ w1282b s = B.replicate (16-clen) '\0' `B.append` converted
 {----
 tests
 ----}
+-- tests whether a given string (first in tuple) which gets
+-- encrypted and then decrypted using the same or different
+-- key(s) is (not) the same as the original string
+
+runTests :: Bool
+runTests = and [testAES test | test <- tests]
+
+-- runs tests from "tests"
+-- compares d(e(plain)) and plain using the supplied eq-function
+-- see comment of "tests" for further information
+testAES :: (Block,(Block->Block->Bool),(Block->Block),(Block->Block)) -> Bool
+testAES (plain,eq,e,d) = plain `eq` (d $ e plain)
+
+-- different keys
 key1 = "justAKeyjustBKey" :: B.ByteString
 key2 = "justBKeyjustAKey" :: B.ByteString
 
+-- partially apply the encode and decode functions using a key
+-- results in functions of the type (Block -> Block)
 e1 = encode key1
 e2 = encode key2
 d1 = decode key1
 d2 = decode key2
 
-runTests :: Bool
-runTests = and [testAES test | test <- tests]
-
-testAES :: (Block,(Block->Block->Bool),(Block->Block),(Block->Block)) -> Bool
-testAES (plain,eq,e,d) = plain `eq` (d $ e plain)
-
+-- (plaintext, equality-function, encoding function, decoding function)
+-- the equality-function should return true if d(e(plain)) matches
+-- the expected result, if you decode using another key than the one
+-- used for encode, you expect the result to be different from plain,
+-- thus you need to supply (/=) as "equality"-function
 tests :: [(Block,(Block->Block->Bool),(Block->Block),(Block->Block))]
-tests = [(empty,(==),e1,d1)
-		,(empty,(/=),e1,d2)
-		,(empty,(/=),e2,d1)
-		,(empty,(==),e2,d2)
+tests = [(nulls,(==),e1,d1)
+		,(nulls,(/=),e1,d2)
+		,(nulls,(/=),e2,d1)
+		,(nulls,(==),e2,d2)
 		,(as,(==),e1,d1)
 		,(as,(/=),e1,d2)
 		,(as,(/=),e2,d1)
 		,(as,(==),e2,d2)
 		]
 	where
-		empty = B.replicate 16 '\0'
+		nulls = B.replicate 16 '\0'
 		as = B.replicate 16 'a'
