@@ -40,7 +40,6 @@ instance Ord MsgPart where
 	compare a b = compare (msgtype a) (msgtype b)
 
 -- interprets the first line of a msgpart
--- TODO: make sure the first line actually starts with "----BEGIN "
 readHdr :: B.ByteString -> (MsgType, [B.ByteString])
 readHdr hdr = (msgtype, msgoptions)
 	where
@@ -54,15 +53,14 @@ readHdr hdr = (msgtype, msgoptions)
 readMsg :: B.ByteString -> MsgPart
 readMsg input = makeMsg (readHdr headerLine) content
 	where
-		headerLine = head (B.lines input)
+		headerLine = head $ B.lines input
 		-- outermost 'init' is for removing the trailing \n added by unlines
 		content = B.init . B.unlines . init . tail $ B.lines input
 
 -- gets messageparts from a file
--- hf explaining this...
 -- http://stackoverflow.com/questions/7636447/raise-no-instance-for-regexcontext-regex-char-string
 getMsgParts :: B.ByteString -> [MsgPart]
 getMsgParts input = map readMsg regmatches
 	where
 		regmatches = getAllTextMatches (input =~ regex :: AllTextMatches [] B.ByteString)
-		regex = "----BEGIN [A-Z0-9 ]+----\n[a-zA-Z0-9+/=]+\n----END [A-Z0-9]+----" :: B.ByteString
+		regex = "----BEGIN [A-Z0-9 ]+----\n[a-zA-Z0-9+/=,]+\n----END [A-Z0-9]+----" :: B.ByteString
