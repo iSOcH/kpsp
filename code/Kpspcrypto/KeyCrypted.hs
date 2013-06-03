@@ -14,6 +14,9 @@ import Kpspcrypto.Serial
 import qualified Kpspcrypto.Base64 as B64
 import qualified Kpspcrypto.RSA as RSA
 
+-- creates a KEYCRYPTED-msgpart using the given asymmetric
+-- cipher, the given key for the asymmetric cipher and
+-- the given content in encrypted form
 genMsgPart :: AsymCipher -> AsymKey -> B.ByteString -> MsgPart
 genMsgPart "RSA" akey skey = MsgPart KEYCRYPTED ["RSA"] enckey
 	where 
