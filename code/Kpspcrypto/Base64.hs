@@ -109,3 +109,13 @@ decodeR x = subs next `B.append` decodeR rest
 -- contains the 6bit-values for the allowed chars in Base64 encoded data
 tableR :: M.Map Char Int
 tableR = M.fromList [(table V.! v ,v) | v <- [0..63]]
+
+{----
+tests
+----}
+runTests :: Bool
+runTests = and [str == (decode . encode $ str) | str <- teststrings]
+
+-- returns some strings of various lengths
+teststrings = map B.pack [replicate i (chr $ i+j+k) ++ replicate j (chr $ 7*i+9*j) ++ replicate k (chr $ 11*i+3*k+2*j) |
+		i <- [0..10], j <- [0..10], k <- [0..10]]
