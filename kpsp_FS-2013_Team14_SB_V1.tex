@@ -1,0 +1,119 @@
+\documentclass[11pt,a4paper,parskip=half]{scrartcl}
+\usepackage{ngerman}
+\usepackage[utf8]{inputenc}
+\usepackage[colorlinks=false,pdfborder={0 0 0}]{hyperref}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nameref}
+\geometry{a4paper, left=30mm, right=25mm, top=30mm, bottom=35mm} 
+\usepackage{listings}
+\lstset{breaklines=true, breakatwhitespace=true, basicstyle=\small, numbers=left}
+%\setcounter{tocdepth}{2} %no subsubsections in TOC
+
+\title{kpsp: Schlussbericht hybride Kryptographie}
+\author{Marianne Schoch, Pascal Schwarz}
+\begin{document}
+
+\maketitle
+
+\section{Abstract}
+Dieser Teil wird im finalen Bericht enthalten sein.
+
+\section{Einleitung / Idee}
+Die Software erlaubt die Erzeugung von verschlüsselten und signierten Nachrichten sowie deren Entschlüsselung. Die Nachrichten werden in Dateien gespeichert resp. aus Dateien gelesen.
+
+Die Nachricht selbst wird mit einem symmetrischen Verfahren unter Verwendung eines zufälligen Schlüssels verschlüsselt. Dieser Schlüssel wird dem Empfänger der Nachricht ebenfalls übermittelt. Dazu wird der public Key des asymmetrischen Verschlüsselungsverfahrens verwendet.
+
+Um die Integrität der Nachricht sicherstellen zu können wird des Weiteren eine Signatur, wiederum mit Hilfe des asymmetrischen Verschlüsselungsverfahrens und einer zusätzlichen Hashfunktion, der Nachricht beigefügt.
+
+Zusätzlich ermöglichen wir die Erzeugung von Schlüsselpaaren für das asymmetrische Verschlüsselungsverfahren.
+
+\section{Theorie}
+\subsection{Nachrichtenformat}
+\subsubsection{Überblick}
+Die zu übermittelnde Datei besteht aus drei Teilen, die in den nachfolgenden Abschnitten beschrieben werden. Die Teile werden dabei in der folgenden Art markiert:
+\begin{lstlisting}
+----BEGIN <Abschnittname> [Option]----
+<Inhalt des Abschnittes, Base64 kodiert>
+----END <Abschnittname>----
+\end{lstlisting}
+
+\subsubsection{Teil KEYCRYPTED}
+Enthält den zufälligen \glqq{}Sitzungsschlüssel\grqq{}, der für das symmetrische Verschlüsselungsverfahren verwendet wird. Als Option wird das verwendete asymmetrische Verschlüsselungsverfahren angegeben. Da bei RSA die Länge des Plaintexts bekannt sein muss, wird diese (in Bytes) ebenfalls angegeben. Die Abschnittsmarkierung kann dann beispielsweise folgendermassen aussehen:
+\begin{lstlisting}
+----BEGIN KEYCRYPTED RSA 8----
+<Base64 kodiertes Resultat der RSA-Verschluesselung des Sitzungsschluessels>
+----END KEYCRYPTED----
+\end{lstlisting}
+
+Die Anwendung von RSA auf den Sitzungsschlüssel wird in Gruppen von 4 Bytes vorgenommen. Dabei werden die Bytes konkateniert und als Zahl intepretiert.
+
+Für Keys, deren Länge nicht ohne Rest durch vier teilbar sind (dies ist beispielsweise bei DES der Fall) wird der Input um Nullen ergänzt. Damit diese Nullen beim Entschlüsseln ignoriert werden können, wird die Längenangabe benötigt.
+
+\subsubsection{Teil MSGCRYPTED}
+Für die Verschlüsselung der eigentlichen Nachricht kommt ein symmetrisches Verfahren zum Einsatz. Falls es sich dabei um eine Blockchiffre handelt, wird neben dem Namen des Algorithmus ebenfalls angegeben, in welchem Modus die Blöcke verkettet werden. Falls ein Initialisierungsvektor benötigt wird, wird dieser zufällig erzeugt und in diesem Teil der Nachricht, mit einem \glqq{},\grqq{} vom Ciphertext separiert, abgelegt.
+
+Kommt AES mit CBC als Modus zum Einsatz, sieht der Abschnitt folgendermassen aus:
+\begin{lstlisting}
+----BEGIN MSGCRYPTED AES256 CBC----
+<Base64 kodierter IV>,<Base64 kodiertes Resultat der Verschluesselung>
+----END MSGCRYPTED----
+\end{lstlisting}
+
+\subsubsection{Teil SIGNATURE}
+Die Signatur wird erzeugt, indem die verschlüsselten Inhalte der Teile KEYCRYPTED und MSGCRYPTED konkateniert werden. Nach der Anwendung eines Hash-Verfahrens wird beispielsweise RSA für die Erstellung der Signatur verwendet. Die Optionen für diesen Teil der Datei enthalten das verwendete Hashverfahren (woraus die Länge des Hashes abgeleitet werden kann) als auch das für die Signatur verwendete Kryptosystem. Ein Beispiel mit SHA256 und RSA sähe demnach so aus:
+\begin{lstlisting}
+----BEGIN SIGNATURE SHA256 RSA----
+<Base64 kodiertes Resultat der RSA-Signierung von SHA256(KEYCRYPTED|MSGCRYPTED)>
+----END SIGNATURE----
+\end{lstlisting}
+
+\subsection{Schlüsselformat}
+\subsubsection{RSA}
+RSA Schlüssel bestehen aus Exponent (e oder d) und dem Produkt der beiden Primzahlen (n). Diese werden in einer Datei mit dem folgenden Format gespeichert:
+\begin{lstlisting}
+----BEGIN RSA PUBLIC KEY----
+<Base64 kodierte Binaerdarstellung von e>,<Base64 kodierte Binaerdarstellung von n>
+----END RSA PUBLIC KEY----
+\end{lstlisting}
+
+\subsection{Verwendung}
+\subsubsection{Dateien}
+\begin{description}
+	\item[plain] Datei mit zu verschlüsselndem Inhalt oder Resultat der Entschlüsselung
+	\item[crypt] Datei mit Resultat der Verschlüsselung
+	\item[rsapriv] Datei mit eigenem privatem RSA-Schlüssel
+	\item[rsapub] Datei mit eigenem öffentlichem RSA-Schlüssel
+	\item[rsapubrecv] Datei mit öffentlichem RSA-Schlüssel des Empfängers
+\end{description}
+
+\subsubsection{Schlüsselerzeugung}
+Erzeugung eines Schlüsselpaares:
+\begin{lstlisting}
+./hskeygenerator
+\end{lstlisting}
+
+\subsubsection{Ver- und Entschlüsselung}
+Verschlüsselung:
+\begin{lstlisting}
+./hsencrypt <asymm. kryptosystem> <hashverfahren> <symm. kryptosystem> <modus> <empfaenger public key> <verschluesselte datei>
+\end{lstlisting}
+
+Entschlüsselung:
+\begin{lstlisting}
+./hsdecrypt <sender publickey> <verschluesselte datei>
+\end{lstlisting}
+
+\section{Implementation}
+Dieser Teil wird im finalen Bericht enthalten sein.
+
+\section{Testfälle}
+Dieser Teil wird im finalen Bericht enthalten sein.
+
+\end{document}
