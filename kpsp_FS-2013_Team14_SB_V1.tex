@@ -11,6 +11,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{nameref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
 \geometry{a4paper, left=30mm, right=25mm, top=30mm, bottom=35mm} 
 \usepackage{listings}
 \lstset{breaklines=true, breakatwhitespace=false, tabsize=2, basicstyle=\small, frame=single, numbers=left}
@@ -23,7 +25,7 @@
 \maketitle
 
 \section{Abstract}
-Im Rahmen der Projektarbeit im Modul kpsp wurde Hybride Kryptographie implementiert. Die Software erlaubt Ver- und Entschlüsselung mittels den Verschlüsselungsverfahren RSA, AES256 und SHA256. Desweiteren wurden die Block Modes ECB und CBC implementiert. Die ver- und entschlüsselten Texte werden in Files geschrieben bzw. aus Files geholt.
+Im Rahmen der Projektarbeit im Modul kpsp wurde Hybride Kryptographie implementiert. Die Software erlaubt Ver- und Entschlüsselung mittels den Verschlüsselungsverfahren RSA und AES256. Zum Signieren der Nachrichten wurde SHA256 gewählt. Des Weiteren wurden die Block Modes ECB und CBC implementiert. Die ver- und entschlüsselten Texte werden in Files geschrieben bzw. aus Files geholt.
 Zusätzlich wird das Erzeugen von Schlüsselpaaren für das asymmetrische Verschlüsselungsverfahren ermöglicht.
 
 \section{Einleitung / Idee}
@@ -110,8 +112,7 @@ Entschlüsselung:
 \end{lstlisting}
 
 \subsection{Bemerkungen}
-Als symmetrische Verschlüsselungsverfahren wurden SHA256 und AES256 ausgewählt. AES256 wurde aufgrund des Aufwandes nicht mehr selber implementiert (siehe Hinweise im Code). Als asymmetrisches Verschlüsselungsverfahren wurde RSA gewählt.
-Die Software ist für die Implementierung weiterer Verschlüsselungsverfahren vorbereitet (vgl. Anmerkungen Zwischenfiles).
+Als symmetrische Verschlüsselungsverfahren wurde AES256 ausgewählt. AES256 wurde aufgrund des Aufwandes nicht mehr selber implementiert (siehe Hinweise im Code). Als asymmetrisches Verschlüsselungsverfahren wurde RSA gewählt. Zum Signieren der Nachrichten wird SHA256 verwendet. Die Software ist für die Implementierung weiterer Verschlüsselungsverfahren vorbereitet (vgl. Anmerkungen Zwischenfiles).
 
 \section{Implementation}
 \subsection{Hauptfiles}
@@ -131,6 +132,7 @@ Die Software ist für die Implementierung weiterer Verschlüsselungsverfahren vo
 \subsection{Symmetrische Verschlüsselung}
 \subsubsection{AES256.hs}
 \lstinputlisting{code/Kpspcrypto/AES256.hs}
+\subsection{Signierung}
 \subsubsection{SHA256.hs}
 \lstinputlisting{code/Kpspcrypto/SHA256.hs}
 \subsection{BlockModes.hs}
@@ -140,9 +142,9 @@ Die Software ist für die Implementierung weiterer Verschlüsselungsverfahren vo
 \lstinputlisting{code/Kpspcrypto/RSA.hs}
 \subsubsection{RSAKey.hs}
 \lstinputlisting{code/Kpspcrypto/RSAKey.hs}
-\subsection{Base64.hs}
-\lstinputlisting{code/Kpspcrypto/Base64.hs}
 \subsection{Hilfsfiles}
+\subsubsection{Base64.hs}
+\lstinputlisting{code/Kpspcrypto/Base64.hs}
 \subsubsection{Pad.hs}
 \lstinputlisting{code/Kpspcrypto/Pad.hs}
 \subsubsection{Msg.hs}
