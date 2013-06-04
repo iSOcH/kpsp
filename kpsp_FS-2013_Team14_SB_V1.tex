@@ -13,7 +13,7 @@
 \usepackage{nameref}
 \geometry{a4paper, left=30mm, right=25mm, top=30mm, bottom=35mm} 
 \usepackage{listings}
-\lstset{language=haskell, breaklines=true, breakatwhitespace=true, basicstyle=\small, numbers=left}
+\lstset{breaklines=true, breakatwhitespace=false, basicstyle=\small, numbers=left}
 %\setcounter{tocdepth}{2} %no subsubsections in TOC
 
 \title{kpsp: Schlussbericht hybride Kryptographie}
@@ -45,16 +45,14 @@ Die zu übermittelnde Datei besteht aus drei Teilen, die in den nachfolgenden Ab
 \end{lstlisting}
 
 \subsubsection{Teil KEYCRYPTED}
-Enthält den zufälligen \glqq{}Sitzungsschlüssel\grqq{}, der für das symmetrische Verschlüsselungsverfahren verwendet wird. Als Option wird das verwendete asymmetrische Verschlüsselungsverfahren angegeben. Da bei RSA die Länge des Plaintexts bekannt sein muss, wird diese (in Bytes) ebenfalls angegeben. Die Abschnittsmarkierung kann dann beispielsweise folgendermassen aussehen:
+Enthält den zufälligen \glqq{}Sitzungsschlüssel\grqq{}, der für das symmetrische Verschlüsselungsverfahren verwendet wird. Als Option wird das verwendete asymmetrische Verschlüsselungsverfahren angegeben. Die Abschnittsmarkierung kann dann beispielsweise folgendermassen aussehen:
 \begin{lstlisting}
-----BEGIN KEYCRYPTED RSA 8----
+----BEGIN KEYCRYPTED RSA----
 <Base64 kodiertes Resultat der RSA-Verschluesselung des Sitzungsschluessels>
 ----END KEYCRYPTED----
 \end{lstlisting}
 
-Die Anwendung von RSA auf den Sitzungsschlüssel wird in Gruppen von 4 Bytes vorgenommen. Dabei werden die Bytes konkateniert und als Zahl intepretiert.
-
-Für Keys, deren Länge nicht ohne Rest durch vier teilbar sind (dies ist beispielsweise bei DES der Fall) wird der Input um Nullen ergänzt. Damit diese Nullen beim Entschlüsseln ignoriert werden können, wird die Längenangabe benötigt.
+Die Anwendung von RSA auf den Sitzungsschlüssel wird in Gruppen von 6 Bytes vorgenommen. Dabei werden die Bytes konkateniert und als Zahl intepretiert.
 
 \subsubsection{Teil MSGCRYPTED}
 Für die Verschlüsselung der eigentlichen Nachricht kommt ein symmetrisches Verfahren zum Einsatz. Falls es sich dabei um eine Blockchiffre handelt, wird neben dem Namen des Algorithmus ebenfalls angegeben, in welchem Modus die Blöcke verkettet werden. Falls ein Initialisierungsvektor benötigt wird, wird dieser zufällig erzeugt und in diesem Teil der Nachricht, mit einem \glqq{},\grqq{} vom Ciphertext separiert, abgelegt.
