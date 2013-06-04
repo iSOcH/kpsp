@@ -1,0 +1,163 @@
+\subsection{Key Generator}
+Der Keygenerator soll zufällige RSA-Keys erzeugen. Wir können ihn nach der Kompilation mittles \emph{ghc -XOverloadedStrings hskeygenerator.hs} aufrufen, um Keys für unseren Sender und den Empfänger zu generieren:
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ ./hskeygenerator 
+Enter filename:
+sender
+[iso@iso-t530arch tmp]$ ./hskeygenerator 
+Enter filename:
+receiver
+\end{lstlisting}
+
+Die Inhalte der erzeugten Schlüsselfiles sehen dann wie folgt aus:
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ cat senderRsaPubKey 
+----BEGIN RSA PUBLIC KEY----
+AQAB,uLEhNs/uRmG9
+----END RSA PUBLIC KEY----
+
+iso@iso-t530arch tmp]$ cat senderRsaPrivKey 
+----BEGIN RSA PRIVATE KEY----
+Ia9kwGVnj+Bh,uLEhNs/uRmG9
+----END RSA PRIVATE KEY----
+
+[iso@iso-t530arch tmp]$ cat receiverRsaPubKey 
+----BEGIN RSA PUBLIC KEY----
+AQAB,OSD0b/N9Btp5
+----END RSA PUBLIC KEY----
+
+[iso@iso-t530arch tmp]$ cat receiverRsaPrivKey 
+----BEGIN RSA PRIVATE KEY----
+EbzFqCfx729x,OSD0b/N9Btp5
+----END RSA PRIVATE KEY----
+\end{lstlisting}
+
+Wie erwünscht enthalten die jeweils zueinander gehörigen Private- und Public-Keys den selben Wert für $N$ (\glqq{}uLEhNs/uRmG9\grqq{} bei sender, \glqq{}OSD0b/N9Btp5\grqq{} bei receiver). Bei beiden Schlüsselpaaren wird für $e$ der Wert 65537 verwendet, $d$ hingegen unterscheidet sich zwischen den Schlüsselpaaren.
+
+In diesem Fall wurden die folgenden Schlüssel erzeugt. Die Werte können mittels folgendem Befehl (nach dem Laden von hsencrypt.hs) zurückgewonnen werden:
+\begin{lstlisting}
+Kpspcrypto.Serial.asInt $ Kpspcrypto.Base64.decode "Ia9kwGVnj+Bh"
+\end{lstlisting}
+
+\begin{itemize}
+	\item Sender e: 65537, d: 621380992428485369953, n: 3406964452648185913789
+	\item Receiver e: 65537, d: 327197112392121020273, n: 1053839058196540873337
+\end{itemize}
+
+\subsection{Ver- und Entschlüsselung von Nachrichten}
+\subsubsection{Vorbereitung}
+Mit den folgenden Befehlen werden (unter Linux) zufällige Testnachrichten erstellt und deren Hashwerte (für den späteren Vergleich) ermittelt:
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ dd bs=1k count=1 if=/dev/urandom of=1k.msg
+1+0 records in
+1+0 records out
+1024 bytes (1.0 kB) copied, 0.000435418 s, 2.4 MB/s
+[iso@iso-t530arch tmp]$ dd bs=1k count=100 if=/dev/urandom of=100k.msg
+100+0 records in
+100+0 records out
+102400 bytes (102 kB) copied, 0.0180468 s, 5.7 MB/s
+[iso@iso-t530arch tmp]$ sha256sum 1k.msg 100k.msg 
+fd6df86538db0013a9f943b2d8a03d52a5d6a40cbe3243408167dc15e29a855d  1k.msg
+1b13213582917f5b36751ab66bf22ae19233e259de319181acbeb64d712a3559  100k.msg
+\end{lstlisting}
+
+\subsubsection{Verschlüsselung ECB}
+Für diese Tests werden die zuvor erzeugten Schlüssel verwendet. Wir verschlüsseln die beiden Nachrichten mit den öffentlichen Schlüssel des Empfängers und signieren den Inhalt der Nachricht mit Hilfe des privaten Schlüssels des Senders:
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ ./hsencrypt RSA SHA256 AES256 ECB senderRsaPrivKey receiverRsaPubKey 1k.msg 
+[iso@iso-t530arch tmp]$ ./hsencrypt RSA SHA256 AES256 ECB senderRsaPrivKey receiverRsaPubKey 100k.msg
+\end{lstlisting}
+
+Den Inhalt des 1k-Files schauen wir uns an (Zeilenumbrüche innerhalb der Msg-Teile wurden manuell hinzugefügt):
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ cat 1k.msgEncrypted 
+----BEGIN KEYCRYPTED RSA----
+KB25vJ46fR06,ISPN+nHCYyt3,AdvzIdRlMOpz,LFpPe8rS7WCM,NOgghBG7w74E,
+Li21sI2vAGBH,GfDWpqTKuuP+,KgFI/+tsr+NX
+----END KEYCRYPTED----
+
+----BEGIN MSGCRYPTED AES256 ECB----
+NC5ja4U25ZMXVRQAFlYn0aIJcr26nx+gEYlARbw52QHDoQnywSEZRTFXuQ5K4kSvx1AiW
+L+s719SBx0OGi/o+JOKp+cutp4ArUSHK7aWdBVrJpTi6a0Bj0fyKr5xsAVGZAfC3XCx14
+li16+05/p+fOwN8LzixmqQ2R0T49n+iI7n/9Uw1wu1UbYPfjgBIeXT8HGHc+GevYAkrXv
+QHXVdbFaBZXQBQWWcfr+A0rbfOkxG2bDh5FwR7WF+7PFDK7h2peXSFJ/nFu4SSLBVbEED
+PFbbhG/fS+IcQ4y5Mu5/ICfc2WeZg8r83cRhu2nDJouOzQXM8qxvLrpY0IZ5xhbB2b0mT
+vg01KaD9mp4UrtxDvsqLs9kwuGgMKruqKolM3C49zx3uhBSb0T4uF/2hgowPuhrN0Xppd
+ytMuMvstvJGImPEuj+CAFJ6GbFbBQj5xwlvsgx3tsYiCzTe6A62m0yuATioFDAuGB7A6a
+tdgDLiNyfV3oNFGuBukIe1UAZyz5xDWyfCbR0bG8Ok+38oXqMzRrdyv/zhtwZaugnhnLa
+H/Eu8H3AmqoMz6hVp6xDtX72HcYu/FXOaRtFZsH6PWEPJdu02uCGQ7G/1dUM2frG6SPSj
+lfRxPpUmQTkoDOtk51t/nv2BQUqcwYuDHWHzL4wIw/+wAY1xe5LU/WiPd9/3Galv4saan
+wDsrpFqvbgMdPkOW6wNHBu4Vl8KG4TPRpymwYKvwhg2hIU01RT+zJ+ezVsgrl74cNj5DP
+3NrlNdiKhRVmd7oAJPHde2g6ZhdB1YrcAhSsiVOq118UiKpbn/LfobGUKOTa51/wollRs
+riC4uU4ULyXix0C+WHLHdGd/xwaGmoBSBf0h+I/fUZ97xw6fgdN0oyfek75tdQpiPI18X
+NHVwYd2qAdH/BTuM+ODuqjgPcuunUzJXfGJpQVDBPPQh6akzIyyHfQMBJN0N4o1jfUKL6
+CFWaHmXRQpCnVkFwsKP5NlOYfpjsY7N34OmrqAOZP/wIBYs+HjcF4YxirE98iOcII5Rsf
+O5i/wtQiyXgc/kFkY93uluwrZQT0OJKWzctH0isSIRPqGk3ySliB7Ceh7spqMIVPuPpn4
+W63yFtf9XrzDtW8gMv/roX/0HJmeoW1ysjPjJ+teT6lZ50REmh4/LFGjkRQx2n1x+wflC
+wwTusYA/1I/lzZRDvHhpljHGX1x8H9fYJekBBKYmPu6ufS0uEFS2UwaHFHalwIXuE2kVj
+3Bfiop5rqgZZimVfoFKnFjo+V0d4SXuuqAVv+IFnPorG4nXThHf2TN5h6cn40xrlOfrM3
+iRLB/CMCuvyvaV0luRLSKmYbrjDQr9ShFhLf+ER6Mp0eVxp8GfxnKdkCCpiHjrTM4eVLM
+IoIMH1s=
+----END MSGCRYPTED----
+
+----BEGIN SIGNATURE RSA SHA256----
+i7XYWSqqv8b7,P3ERQK9xnLYD,kMwA8TdQpUcb,OmazloPVsEod,YllxmJXn8mmf,
+FmK2J2p4xgnI
+----END SIGNATURE----
+\end{lstlisting}
+
+Im Header des MSGCRYPTED-Teils ist wie erwartet die ECB-Option gesetzt.
+
+\subsubsection{Entschlüsselung ECB}
+Die beiden Nachrichten können mit Hilfe des privaten Schlüssels des Empfängers und des öffentlichen Schlüssels des Senders entschlüsselt werden (dabei werden die in unserem Fall noch vorhandenen Original-Plaintext-Dateien überschrieben). Die SHA256-Summen der (neuen) Plaintext-Dateien entsprechenen denjenigen vor der Ver- und Entschlüsselung.
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ ./hsdecrypt receiverRsaPrivKey senderRsaPubKey 1k.msgEncrypted 
+[iso@iso-t530arch tmp]$ ./hsdecrypt receiverRsaPrivKey senderRsaPubKey 100k.msgEncrypted 
+[iso@iso-t530arch tmp]$ sha256sum 1k.msg 100k.msg
+fd6df86538db0013a9f943b2d8a03d52a5d6a40cbe3243408167dc15e29a855d  1k.msg
+1b13213582917f5b36751ab66bf22ae19233e259de319181acbeb64d712a3559  100k.msg
+\end{lstlisting}
+
+\subsubsection{Verschlüsselung CBC}
+Die Nachrichten werden mit den selben Keys diesmal im CBC-Modus verschlüsselt und der Header des MSGCRYPTED-Teils überprüft:
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ ./hsencrypt RSA SHA256 AES256 CBC senderRsaPrivKey receiverRsaPubKey 1k.msg 
+[iso@iso-t530arch tmp]$ ./hsencrypt RSA SHA256 AES256 CBC senderRsaPrivKey receiverRsaPubKey 100k.msg
+[iso@iso-t530arch tmp]$ head -5 1k.msgEncrypted 
+----BEGIN KEYCRYPTED RSA----
+DiUzRSdJA72E,EdXLBpnsii33,HL4nUeyNrdUn,BL/Saw/ZQls8,IDrIpuKmMjkJ,
+Hrx7GSmFoNQV,NQOf4xGv0XMJ,KtodRCoiyeZp
+----END KEYCRYPTED----
+
+----BEGIN MSGCRYPTED AES256 CBC----
+....
+\end{lstlisting}
+
+\subsubsection{Entschlüsselung CBC}
+Wiederum Entschlüsseln wir die Nachrichten mit den geeigneten Keys und kontrollieren die Hashwerte:
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ ./hsdecrypt receiverRsaPrivKey senderRsaPubKey 1k.msgEncrypted
+[iso@iso-t530arch tmp]$ ./hsdecrypt receiverRsaPrivKey senderRsaPubKey 100k.msgEncrypted 
+[iso@iso-t530arch tmp]$ sha256sum 1k.msg 100k.msg
+fd6df86538db0013a9f943b2d8a03d52a5d6a40cbe3243408167dc15e29a855d  1k.msg
+b99126267061a7ca4a63a0a59ec6e4b331d63e1dd852e2f4ba4fb72b98048a5d  100k.msg
+\end{lstlisting}
+
+Die Hashwerte stimmen überein, woraus geschlossen werden kann, dass die Ver- und Entschlüsselung der Nachrichten keinen Informationsverlust zur Folge hat.
+
+\subsubsection{Versuch der Entschlüsselung von modifizierten Crypt-Files}
+In diesem Test wird in der CBC-verschlüsselten Datei 1k.msgEncrypted eine Anpassung innerhalb einer der drei Msg-Teilen vorgenommen und versucht, die Nachricht zu entschlüsseln:
+
+\begin{lstlisting}
+[iso@iso-t530arch tmp]$ nano 1k.msgEncrypted 
+[iso@iso-t530arch tmp]$ ./hsdecrypt receiverRsaPrivKey senderRsaPubKey 1k.msgEncrypted 
+signature or key was wrong, exiting...
+\end{lstlisting}
+
+Wir erhalten die erwartete Fehlermeldung und die Datei wurde nicht entschlüsselt.

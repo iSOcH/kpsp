@@ -36,7 +36,7 @@ handleArgs args = do
 				plainFile <- getLine
 				B.writeFile plainFile plaintext
 		else do
-			putStrLn "signature was wrong, exiting..."
+			putStrLn "signature or key was wrong, exiting..."
 
 printUsage :: IO()
 printUsage = do
