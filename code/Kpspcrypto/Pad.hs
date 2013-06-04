@@ -1,5 +1,7 @@
 module Kpspcrypto.Pad (pad, unpad, unpadblocks, block) where
 
+-- helper function. Needed for paddings. 
+
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}

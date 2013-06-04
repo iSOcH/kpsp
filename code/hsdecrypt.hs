@@ -19,15 +19,21 @@ main = do
 
 handleArgs :: [String] -> IO()
 handleArgs args = do	
+	--if we get to few arguments give a hint (printUsage) what we need.
 	if length args /= 3 then do
 		printUsage
 	else do
+		--maps the supplied arguments for further use.
 		[ourprivkey, senderpubkey, cryptcontent] <- mapM B.readFile args
 		let parts@[keypart,msgcpart,sigpart] = sort $ getMsgParts cryptcontent
+		--before decryption check if signature is OK. Otherwise file got changed. 
 		let sigOK = S.verifySig senderpubkey parts
 		if sigOK then do
 			let symkey = K.getSymKey ourprivkey keypart
 			let plaintext = M.getPlain symkey msgcpart
+			--check file ends with "encrypted". If so cut it and
+			--save the plain file under the same name. Otherwise 
+			--let the user choose a filename.
 			if "Encrypted" `isSuffixOf` (args !! 2) then do
 				let plainFile = dropEnd 9 $ args !! 2
 				B.writeFile plainFile plaintext

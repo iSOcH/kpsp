@@ -1,5 +1,9 @@
 module Kpspcrypto.Base64 (encode, decode) where
 
+-- de- and encodes ByteStrings with Base64. The functions encode and
+-- decode are public. The content in every Messagepart is encrypted with
+-- Base64.
+
 -- http://www.haskell.org/haskellwiki/DealingWithBinaryData
 -- http://en.wikipedia.org/wiki/Base64
 
@@ -52,7 +56,8 @@ encodeR (x,padlen)
 		-- convert the [Char] to a ByteString
 		subs input = B.pack $ map (table V.!) (toB64BitGroups input)
 			
--- splits a ByteString (with length 3) into four 6-bit values
+-- splits a ByteString (with length 3) into four 6-bit 
+-- consult http://en.wikipedia.org/wiki/Base64 for further information
 toB64BitGroups :: B.ByteString -> [Int]
 toB64BitGroups x = [
 	shiftR (ord (B.index x 0)) 2,

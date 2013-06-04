@@ -1,5 +1,7 @@
 module Kpspcrypto.RSA (encrypt, sign, decrypt, checksig) where
 
+-- Main RSA module. Functions to en- and decrypt with RSA can be found here. 
+
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}
@@ -17,6 +19,7 @@ type Privkey = Pubkey
 {---------------
 public functions
 ---------------}
+-- encrypt the content of a plain text with the supplied key (keyfilecontent)
 encrypt :: KeyFileContent -> B.ByteString -> B.ByteString
 encrypt key msgIn = asStr $ modexp msg e n
 	where
@@ -25,8 +28,10 @@ encrypt key msgIn = asStr $ modexp msg e n
 		msg = asInt msgIn
 		(eIn,nIn) = fromFile key
 
+-- function to sign -> hash
 sign :: KeyFileContent -> B.ByteString -> B.ByteString
 sign = encrypt
+
 
 decrypt :: KeyFileContent -> B.ByteString -> B.ByteString
 decrypt = encrypt

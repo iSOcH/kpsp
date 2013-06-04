@@ -13,7 +13,7 @@
 \usepackage{nameref}
 \geometry{a4paper, left=30mm, right=25mm, top=30mm, bottom=35mm} 
 \usepackage{listings}
-\lstset{breaklines=true, breakatwhitespace=false, basicstyle=\small, numbers=left}
+\lstset{breaklines=true, breakatwhitespace=false, tabsize=2, basicstyle=\small, frame=single, numbers=left}
 %\setcounter{tocdepth}{2} %no subsubsections in TOC
 
 \title{kpsp: Schlussbericht hybride Kryptographie}
@@ -23,7 +23,8 @@
 \maketitle
 
 \section{Abstract}
-Dieser Teil wird im finalen Bericht enthalten sein.
+Im Rahmen der Projektarbeit im Modul kpsp wurde Hybride Kryptographie implementiert. Die Software erlaubt Ver- und Entschlüsselung mittels den Verschlüsselungsverfahren RSA, AES256 und SHA256. Desweiteren wurden die Block Modes ECB und CBC implementiert. Die ver- und entschlüsselten Texte werden in Files geschrieben bzw. aus Files geholt.
+Zusätzlich wird das Erzeugen von Schlüsselpaaren für das asymmetrische Verschlüsselungsverfahren ermöglicht.
 
 \section{Einleitung / Idee}
 Die Software erlaubt die Erzeugung von verschlüsselten und signierten Nachrichten sowie deren Entschlüsselung. Die Nachrichten werden in Dateien gespeichert resp. aus Dateien gelesen.
@@ -100,15 +101,18 @@ Erzeugung eines Schlüsselpaares:
 \subsubsection{Ver- und Entschlüsselung}
 Verschlüsselung:
 \begin{lstlisting}
-./hsencrypt <asymm. kryptosystem> <hashverfahren> <symm. kryptosystem> <modus> <empfaenger public key> <verschluesselte datei>
+./hsencrypt <asymm. kryptosystem> <hashverfahren> <symm. kryptosystem> <modus> <sender private key> <empfaenger public key> <verschluesselte datei>
 \end{lstlisting}
 
 Entschlüsselung:
 \begin{lstlisting}
-./hsdecrypt <sender publickey> <verschluesselte datei>
+./hsdecrypt <empfaenger private key> <sender publickey> <verschluesselte datei>
 \end{lstlisting}
 
-\newpage
+\subsection{Bemerkungen}
+Als symmetrische Verschlüsselungsverfahren wurden SHA256 und AES256 ausgewählt. AES256 wurde aufgrund des Aufwandes nicht mehr selber implementiert (siehe Hinweise im Code). Als asymmetrisches Verschlüsselungsverfahren wurde RSA gewählt.
+Die Software ist für die Implementierung weiterer Verschlüsselungsverfahren vorbereitet (vgl. Anmerkungen Zwischenfiles).
+
 \section{Implementation}
 \subsection{Hauptfiles}
 \subsubsection{hskeygenerator.hs}

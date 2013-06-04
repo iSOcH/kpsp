@@ -1,5 +1,8 @@
 module Kpspcrypto.Msg where
 
+-- helper functions to create Messageparts. Possible Types
+-- the MsgPart data etc. are defined here. 
+
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}

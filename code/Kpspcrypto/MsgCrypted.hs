@@ -1,5 +1,10 @@
 module Kpspcrypto.MsgCrypted (genMsgPart, getPlain) where
 
+-- Takes the arguments from the main files and prepares them for further use.
+-- With the help of this functions Messageparts etc. for MsgCrypted 
+-- message can be generated.
+-- Are other Encryption Modes created, they need to be added here.
+
 -- needed for using string-literals with ByteString
 -- see http://hackage.haskell.org/packages/archive/bytestring/0.10.2.0/doc/html/Data-ByteString-Char8.html
 {-# LANGUAGE OverloadedStrings #-}
