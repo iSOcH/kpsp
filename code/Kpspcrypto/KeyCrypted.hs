@@ -41,7 +41,7 @@ sample data and tests
 rsapubkey = "----BEGIN RSA PUBLIC KEY----\nBrk=,BAYh\n----END RSA PUBLIC KEY----" :: B.ByteString
 rsaprivkey = "----BEGIN RSA PRIVATE KEY----\nBV0=,BAYh\n----END RSA PRIVATE KEY----" :: B.ByteString
 
--- reicht für 4 bytes :)
+-- reicht fuer 4 bytes :)
 rsapriv2 = "----BEGIN RSA PRIVATE KEY----\nzFEWC0E=,AQro6bcX\n----END RSA PRIVATE KEY----" :: B.ByteString
 rsapub2 = "----BEGIN RSA PUBLIC KEY----\nAQAB,AQro6bcX\n----END RSA PUBLIC KEY----" :: B.ByteString
 

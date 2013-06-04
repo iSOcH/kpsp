@@ -122,7 +122,7 @@ of echo -ne "input" | sha256sum on linux
 ---------------------------------------}
 
 -- printf "%08x" wandelt einen Int in die Hexdarstellung um
--- üblicherweise werden hashes in Hex ausgegeben
+-- ueblicherweise werden hashes in Hex ausgegeben
 hex :: B.ByteString -> B.ByteString
 hex = B.pack . printf "%08x" . asInt
 

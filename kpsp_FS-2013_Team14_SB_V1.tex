@@ -13,7 +13,7 @@
 \usepackage{nameref}
 \geometry{a4paper, left=30mm, right=25mm, top=30mm, bottom=35mm} 
 \usepackage{listings}
-\lstset{breaklines=true, breakatwhitespace=true, basicstyle=\small, numbers=left}
+\lstset{language=haskell, breaklines=true, breakatwhitespace=true, basicstyle=\small, numbers=left}
 %\setcounter{tocdepth}{2} %no subsubsections in TOC
 
 \title{kpsp: Schlussbericht hybride Kryptographie}
@@ -110,10 +110,47 @@ Entschlüsselung:
 ./hsdecrypt <sender publickey> <verschluesselte datei>
 \end{lstlisting}
 
+\newpage
 \section{Implementation}
-Dieser Teil wird im finalen Bericht enthalten sein.
+\subsection{Hauptfiles}
+\subsubsection{hskeygenerator.hs}
+\lstinputlisting{code/hskeygenerator.hs}
+\subsubsection{hsencrypt.hs}
+\lstinputlisting{code/hsencrypt.hs}
+\subsubsection{hsdecrypt.hs}
+\lstinputlisting{code/hsdecrypt.hs}
+\subsection{Zwischenfiles}
+\subsubsection{KeyCrypted.hs}
+\lstinputlisting{code/Kpspcrypto/KeyCrypted.hs}
+\subsubsection{MsgCrypted.hs}
+\lstinputlisting{code/Kpspcrypto/MsgCrypted.hs}
+\subsubsection{Signature.hs}
+\lstinputlisting{code/Kpspcrypto/Signature.hs}
+\subsection{Symmetrische Verschlüsselung}
+\subsubsection{AES256.hs}
+\lstinputlisting{code/Kpspcrypto/AES256.hs}
+\subsubsection{SHA256.hs}
+\lstinputlisting{code/Kpspcrypto/SHA256.hs}
+\subsection{BlockModes.hs}
+\lstinputlisting{code/Kpspcrypto/BlockModes.hs}
+\subsection{Asymmetrische Verschlüsselung}
+\subsubsection{RSA.hs}
+\lstinputlisting{code/Kpspcrypto/RSA.hs}
+\subsubsection{RSAKey.hs}
+\lstinputlisting{code/Kpspcrypto/RSAKey.hs}
+\subsection{Base64.hs}
+\lstinputlisting{code/Kpspcrypto/Base64.hs}
+\subsection{Hilfsfiles}
+\subsubsection{Pad.hs}
+\lstinputlisting{code/Kpspcrypto/Pad.hs}
+\subsubsection{Msg.hs}
+\lstinputlisting{code/Kpspcrypto/Msg.hs}
+\subsubsection{Serial.hs}
+\lstinputlisting{code/Kpspcrypto/Serial.hs}
+
+
 
 \section{Testfälle}
-Dieser Teil wird im finalen Bericht enthalten sein.
+\input{kpsp_FS-2013_Team14_ZB_Testfaelle.tex}
 
 \end{document}
