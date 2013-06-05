@@ -49,7 +49,9 @@ douncbc cipher iv (x:xs) = plain : douncbc cipher x xs
 	where
 		ivi = asInt iv
 		xdec = asInt $ cipher x
-		plain = asStr $ ivi `xor` xdec
+		plain' = asStr $ ivi `xor` xdec
+		plainlengthmissing = B.length iv - B.length plain'
+		plain = B.replicate plainlengthmissing '\0' `B.append` plain'
 
 -- electronic codebook mode
 -- https://en.wikipedia.org/wiki/Block_cipher_modes_of_operation#Electronic_codebook_.28ECB.29
